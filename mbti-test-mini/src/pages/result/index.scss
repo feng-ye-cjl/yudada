@@ -1,0 +1,25 @@
+$img: '../../assets/bg.jpg';
+.result {
+  background: #A2C7D7;
+  width: 100vw;
+  background: url($img) center no-repeat;
+  background-size: cover; /* 确保图片覆盖整个元素 */
+  min-height: 100vh; /* 确保至少为视口高度 */
+
+  .title {
+    color: aliceblue;
+    padding-top: 48px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .subtitle {
+    color: aliceblue;
+    margin-bottom: 50px;
+    text-align: center;
+  }
+
+  .enterBtn {
+    width: 60vw;
+  }
+}
