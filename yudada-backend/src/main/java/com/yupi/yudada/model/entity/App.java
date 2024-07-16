@@ -80,7 +80,7 @@ public class App implements Serializable {
     private Date updateTime;
 
     /**
-     * 是否删除
+     * 是否删除（逻辑删除）
      */
     @TableLogic
     private Integer isDelete;
