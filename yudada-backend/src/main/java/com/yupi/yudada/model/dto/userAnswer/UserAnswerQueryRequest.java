@@ -18,9 +18,34 @@ public class UserAnswerQueryRequest extends PageRequest implements Serializable 
 
 
     /**
-     * id
+     *
      */
     private Long id;
+
+    /**
+     * 应用 id
+     */
+    private Long appId;
+
+    /**
+     * 应用类型（0-得分类，1-角色测评类）
+     */
+    private Integer appType;
+
+    /**
+     * 评分策略（0-自定义，1-AI）
+     */
+    private Integer scoringStrategy;
+
+    /**
+     * 用户答案（JSON 数组）
+     */
+    private String choices;
+
+    /**
+     * 评分结果 id
+     */
+    private Long resultId;
 
     /**
      * 结果名称，如物流师
@@ -33,27 +58,17 @@ public class UserAnswerQueryRequest extends PageRequest implements Serializable 
     private String resultDesc;
 
     /**
-     * 结果图片
+     * 结果图标
      */
     private String resultPicture;
 
     /**
-     * 结果属性集合 JSON，如 [I,S,T,J]
+     * 得分
      */
-    private String resultProp;
+    private Integer resultScore;
 
     /**
-     * 结果得分范围，如 80，表示 80及以上的分数命中此结果
-     */
-    private Integer resultScoreRange;
-
-    /**
-     * 应用 id
-     */
-    private Long appId;
-
-    /**
-     * 创建用户 id
+     * 用户 id
      */
     private Long userId;
 
