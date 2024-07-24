@@ -87,6 +87,7 @@ public class QuestionVO implements Serializable {
         BeanUtils.copyProperties(question, questionVO);
         // 题目内容json转obj
         String questionContent = question.getQuestionContent();
+        // 只有题目内容不为空时才进行转换，否则直接返回
         if (questionContent != null) {
             questionVO.setQuestionContent(JSONUtil.toList(questionContent, QuestionContentDTO.class));
         }

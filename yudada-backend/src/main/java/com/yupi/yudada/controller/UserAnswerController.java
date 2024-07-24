@@ -14,9 +14,13 @@ import com.yupi.yudada.model.dto.userAnswer.UserAnswerAddRequest;
 import com.yupi.yudada.model.dto.userAnswer.UserAnswerEditRequest;
 import com.yupi.yudada.model.dto.userAnswer.UserAnswerQueryRequest;
 import com.yupi.yudada.model.dto.userAnswer.UserAnswerUpdateRequest;
+import com.yupi.yudada.model.entity.App;
 import com.yupi.yudada.model.entity.UserAnswer;
 import com.yupi.yudada.model.entity.User;
+import com.yupi.yudada.model.enums.ReviewStatusEnum;
 import com.yupi.yudada.model.vo.UserAnswerVO;
+import com.yupi.yudada.scoring.ScoringStrategyExecutor;
+import com.yupi.yudada.service.AppService;
 import com.yupi.yudada.service.UserAnswerService;
 import com.yupi.yudada.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +47,12 @@ public class UserAnswerController {
     @Resource
     private UserService userService;
 
+    @Resource
+    private AppService appService;
+
+    @Resource
+    private ScoringStrategyExecutor scoringStrategyExecutor;
+
     // region 增删改查
 
     /**
@@ -63,7 +73,15 @@ public class UserAnswerController {
         userAnswer.setChoices(JSONUtil.toJsonStr(choices));
         // 数据校验
         userAnswerService.validUserAnswer(userAnswer, true);
-        // todo 填充默认值
+        // 判断app是否存在
+        Long appId = userAnswerAddRequest.getAppId();
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.PARAMS_ERROR, "app不存在");
+        // 无法查看未过审的应用
+        if (!ReviewStatusEnum.PASS.equals(ReviewStatusEnum.getEnumByValue(app.getReviewStatus()))) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "应用未通过审核，无法答题");
+        }
+        // 填充默认值
         User loginUser = userService.getLoginUser(request);
         userAnswer.setUserId(loginUser.getId());
         // 写入数据库
@@ -71,6 +89,16 @@ public class UserAnswerController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         // 返回新写入的数据 id
         long newUserAnswerId = userAnswer.getId();
+        // 调用评分模块执行评分
+        try {
+            UserAnswer userAnswerWithResult = scoringStrategyExecutor.doScore(choices, app);
+            // 设置id
+            userAnswerWithResult.setId(newUserAnswerId);
+            userAnswerService.updateById(userAnswerWithResult);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "评分失败");
+        }
         return ResultUtils.success(newUserAnswerId);
     }
 
