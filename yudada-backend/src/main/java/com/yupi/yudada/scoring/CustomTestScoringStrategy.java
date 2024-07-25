@@ -13,7 +13,6 @@ import com.yupi.yudada.service.QuestionService;
 import com.yupi.yudada.service.ScoringResultService;
 
 import javax.annotation.Resource;
-import javax.swing.text.html.Option;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,9 +38,11 @@ public class CustomTestScoringStrategy implements ScoringStrategy {
     @Override
     public UserAnswer doScore(List<String> choices, App app) throws Exception {
         // 1. 根据id查询题目和评分结果信息
-        LambdaQueryWrapper<Question> questionLambdaQueryWrapper = Wrappers.lambdaQuery(Question.class).eq(Question::getAppId, app.getId());
+        LambdaQueryWrapper<Question> questionLambdaQueryWrapper =
+                Wrappers.lambdaQuery(Question.class).eq(Question::getAppId, app.getId());
         Question question = questionService.getOne(questionLambdaQueryWrapper);
-        LambdaQueryWrapper<ScoringResult> scoringResultLambdaQueryWrapper = Wrappers.lambdaQuery(ScoringResult.class).eq(ScoringResult::getAppId, app.getId());
+        LambdaQueryWrapper<ScoringResult> scoringResultLambdaQueryWrapper =
+                Wrappers.lambdaQuery(ScoringResult.class).eq(ScoringResult::getAppId, app.getId());
         List<ScoringResult> scoringResults = scoringResultService.list(scoringResultLambdaQueryWrapper);
 
         // 2.统计用户每个选择对应的属性个数（I 10个， E 5个）

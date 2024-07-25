@@ -2,11 +2,9 @@ package com.yupi.yudada.scoring;
 
 import com.yupi.yudada.model.entity.App;
 import com.yupi.yudada.model.entity.UserAnswer;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public interface ScoringStrategy {
 
     /**

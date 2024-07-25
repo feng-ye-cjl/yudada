@@ -198,8 +198,6 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         // endregion
 
         appVOPage.setRecords(appVOList);
-        System.out.println("appVOPage: {}----------------------------------------");
-        System.out.println(appVOPage);
         return appVOPage;
     }
 

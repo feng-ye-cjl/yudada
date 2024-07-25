@@ -26,8 +26,6 @@ import java.util.Date;
 
 /**
  * 应用接口
- *
- *
  */
 @RestController
 @RequestMapping("/app")
