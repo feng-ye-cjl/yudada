@@ -23,6 +23,7 @@ router.beforeEach(async (to, from, next) => {
       !loginUser.userRole ||
       loginUser.userRole === accessEnum.NOT_LOGIN
     ) {
+      console.log("用户未登录");
       next(`/user/login?redirect=${to.fullPath}`);
       return;
     }

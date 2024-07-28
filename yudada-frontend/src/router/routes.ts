@@ -5,6 +5,7 @@ import UserRegisterPage from "@/views/user/UserRegisterPage.vue";
 import HelloWorld from "@/components/HelloWorld.vue";
 import accessEnum from "@/access/accessEnum";
 import AboutView from "@/views/AboutView.vue";
+import AdminUserPage from "@/views/admin/AdminUserPage.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -13,9 +14,9 @@ export const routes: Array<RouteRecordRaw> = [
     component: AboutView,
   },
   {
-    path: "/admin",
-    name: "管理",
-    component: HelloWorld,
+    path: "/admin/user",
+    name: "用户管理",
+    component: AdminUserPage,
     meta: {
       access: accessEnum.ADMIN,
     },
