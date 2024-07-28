@@ -3,8 +3,14 @@ import App from "./App.vue";
 import router from "./router";
 import ArcoVue from "@arco-design/web-vue";
 import "@arco-design/web-vue/dist/arco.css";
+import { createPinia } from "pinia";
+import ArcoVueIcon from "@arco-design/web-vue/es/icon";
+
+// 新引入配置的复制区域
+// 额外引入图标库
+
+// ...
 
 const app = createApp(App);
-app.use(router);
-app.use(ArcoVue);
-app.mount("#app");
+const pinia = createPinia();
+app.use(router).use(ArcoVue).use(ArcoVueIcon).use(pinia).mount("#app");

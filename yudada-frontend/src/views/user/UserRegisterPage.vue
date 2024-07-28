@@ -40,14 +40,28 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from "vue";
+import { ref } from "vue";
+import { userRegisterUsingPost } from "@/api/userController";
+import { Message } from "@arco-design/web-vue";
+import { useRouter } from "vue-router";
 
-const form = reactive({
+const router = useRouter();
+
+const form = ref({
   userAccount: "",
   userPassword: "",
   checkPassword: "",
 });
-const handleSubmit = () => {
-  console.log(11);
+const handleSubmit = async () => {
+  console.log("用户注册");
+  // 用户登录
+  const res = await userRegisterUsingPost(form.value);
+  console.log("login res = ", res);
+  if (res.data.code === 0) {
+    Message.success("注册成功");
+    await router.push({ path: "/user/login" });
+  } else {
+    Message.error(res.data.message as string);
+  }
 };
 </script>

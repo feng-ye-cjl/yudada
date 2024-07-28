@@ -26,11 +26,14 @@
   </div>
 </template>
 
+<script setup lang="ts"></script>
+
 <style scoped lang="scss">
 #userLayout {
   text-align: center;
   //background: url("https://gw.alipayobjects.com/zos/rmsportal/FfdJeJRQWjEeGTpqgBKj.png") 0% 0% / 100% 100%;
   background: linear-gradient(to bottom right, #ff7e5f, #6dd5ed);
+
   .logo {
     width: 48px;
     height: 48px;

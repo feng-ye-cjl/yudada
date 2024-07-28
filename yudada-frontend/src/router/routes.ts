@@ -2,8 +2,32 @@ import { RouteRecordRaw } from "vue-router";
 import UserLayout from "@/layouts/UserLayout.vue";
 import UserLoginPage from "@/views/user/UserLoginPage.vue";
 import UserRegisterPage from "@/views/user/UserRegisterPage.vue";
+import HelloWorld from "@/components/HelloWorld.vue";
+import accessEnum from "@/access/accessEnum";
+import AboutView from "@/views/AboutView.vue";
 
 export const routes: Array<RouteRecordRaw> = [
+  {
+    path: "/",
+    name: "首页",
+    component: AboutView,
+  },
+  {
+    path: "/admin",
+    name: "管理",
+    component: HelloWorld,
+    meta: {
+      access: accessEnum.ADMIN,
+    },
+  },
+  {
+    path: "/hide",
+    name: "隐藏页面",
+    component: HelloWorld,
+    meta: {
+      hideInMenu: true,
+    },
+  },
   {
     path: "/user",
     name: "用户",
@@ -20,5 +44,8 @@ export const routes: Array<RouteRecordRaw> = [
         component: UserRegisterPage,
       },
     ],
+    meta: {
+      hideInMenu: true,
+    },
   },
 ];

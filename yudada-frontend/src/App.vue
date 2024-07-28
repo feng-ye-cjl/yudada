@@ -13,11 +13,21 @@
 <script setup lang="ts">
 import BasicLayout from "@/layouts/BasicLayout.vue";
 import { useRoute } from "vue-router";
+import { onMounted } from "vue";
 
 const route = useRoute();
-</script>
 
+// 全局初始化
+const init = async () => {
+  console.log("project init");
+};
+
+onMounted(() => {
+  init();
+});
+</script>
 <style scoped>
 #app {
+  box-sizing: border-box;
 }
 </style>
