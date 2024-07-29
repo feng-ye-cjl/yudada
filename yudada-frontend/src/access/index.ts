@@ -28,7 +28,7 @@ router.beforeEach(async (to, from, next) => {
       return;
     }
     // 如果用户已经登录但是权限不足，则跳转动啊404页面
-    if (!checkAccess(userStore, needAccess)) {
+    if (!checkAccess(loginUser, needAccess)) {
       next("/noAuth");
       return;
     }

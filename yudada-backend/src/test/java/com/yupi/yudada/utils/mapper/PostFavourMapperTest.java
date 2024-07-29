@@ -1,8 +1,9 @@
-package com.yupi.yudada.mapper;
+package com.yupi.yudada.utils.mapper;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.yupi.yudada.mapper.PostFavourMapper;
 import com.yupi.yudada.model.entity.Post;
 import javax.annotation.Resource;
 import org.junit.jupiter.api.Assertions;

@@ -1,5 +1,6 @@
-package com.yupi.yudada.mapper;
+package com.yupi.yudada.utils.mapper;
 
+import com.yupi.yudada.mapper.PostMapper;
 import com.yupi.yudada.model.entity.Post;
 import java.util.Date;
 import java.util.List;

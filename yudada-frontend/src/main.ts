@@ -7,6 +7,8 @@ import { createPinia } from "pinia";
 import ArcoVueIcon from "@arco-design/web-vue/es/icon";
 // 全局登录校验
 import "@/access";
+// bytemd全局样式
+import "bytemd/dist/index.css";
 
 // 新引入配置的复制区域
 // 额外引入图标库

@@ -6,6 +6,7 @@ import HelloWorld from "@/components/HelloWorld.vue";
 import accessEnum from "@/access/accessEnum";
 import AboutView from "@/views/AboutView.vue";
 import AdminUserPage from "@/views/admin/AdminUserPage.vue";
+import NoAuth from "@/components/NoAuth.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -25,6 +26,14 @@ export const routes: Array<RouteRecordRaw> = [
     path: "/hide",
     name: "隐藏页面",
     component: HelloWorld,
+    meta: {
+      hideInMenu: true,
+    },
+  },
+  {
+    path: "/noAuth",
+    name: "无权限",
+    component: NoAuth,
     meta: {
       hideInMenu: true,
     },
