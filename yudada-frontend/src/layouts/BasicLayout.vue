@@ -29,7 +29,8 @@ import GlobalHeader from "@/components/GlobalHeader.vue";
   }
 
   .content {
-    margin-bottom: 28px;
+    width: 85vw;
+    margin: 0 auto 36px;
     padding: 20px;
     background: linear-gradient(to right, #fefefe, #fff);
   }

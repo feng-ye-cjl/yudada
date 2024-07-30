@@ -7,6 +7,10 @@ import accessEnum from "@/access/accessEnum";
 import AboutView from "@/views/AboutView.vue";
 import AdminUserPage from "@/views/admin/AdminUserPage.vue";
 import NoAuth from "@/components/NoAuth.vue";
+import AdminAppPage from "@/views/admin/AdminAppPage.vue";
+import AdminQuestionPage from "@/views/admin/AdminQuestionPage.vue";
+import AdminScoringResultPage from "@/views/admin/AdminScoringResultPage.vue";
+import AdminUserAnswerPage from "@/views/admin/AdminUserAnswerPage.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -18,6 +22,38 @@ export const routes: Array<RouteRecordRaw> = [
     path: "/admin/user",
     name: "用户管理",
     component: AdminUserPage,
+    meta: {
+      access: accessEnum.ADMIN,
+    },
+  },
+  {
+    path: "/admin/app",
+    name: "应用管理",
+    component: AdminAppPage,
+    meta: {
+      access: accessEnum.ADMIN,
+    },
+  },
+  {
+    path: "/admin/question",
+    name: "题目管理",
+    component: AdminQuestionPage,
+    meta: {
+      access: accessEnum.ADMIN,
+    },
+  },
+  {
+    path: "/admin/scoring_result",
+    name: "评分管理",
+    component: AdminScoringResultPage,
+    meta: {
+      access: accessEnum.ADMIN,
+    },
+  },
+  {
+    path: "/admin/user_answer",
+    name: "回答管理",
+    component: AdminUserAnswerPage,
     meta: {
       access: accessEnum.ADMIN,
     },

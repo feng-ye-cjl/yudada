@@ -8,15 +8,10 @@
           v-model="form.id"
           placeholder="请输入用户Id"
           class="input-demo"
-          :allow-clear="true"
         />
       </a-form-item>
       <a-form-item field="name" label="用户名">
-        <a-input
-          v-model="form.userName"
-          placeholder="请输入用户名"
-          :allow-clear="true"
-        />
+        <a-input v-model="form.userName" placeholder="请输入用户名" />
       </a-form-item>
       <a-form-item>
         <a-button @click="handleSearch" type="primary">
@@ -199,5 +194,7 @@ watchEffect(() => {
 </script>
 <style scoped>
 #adminUserPage {
+  width: 85vw;
+  margin: 0 auto;
 }
 </style>
