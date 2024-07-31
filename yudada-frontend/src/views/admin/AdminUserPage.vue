@@ -1,10 +1,10 @@
 <template>
   <div id="adminUserPage">
     <!--搜索列表-->
-    <a-form :model="form" :layout="layout" @keydown.enter="handleSearch">
+    <a-form :model="form" layout="inline" @keydown.enter="handleSearch">
       <a-form-item field="post" label="用户Id">
         <!--<a-input v-model="form.id" placeholder="请输入用户Id" />-->
-        <a-input-number
+        <a-input
           v-model="form.id"
           placeholder="请输入用户Id"
           class="input-demo"
@@ -71,7 +71,6 @@ import { Message } from "@arco-design/web-vue";
 import dayjs from "dayjs";
 
 // region 搜索表单
-const layout = ref("inline");
 const form = ref({
   userName: "",
   id: "",
@@ -89,7 +88,6 @@ const handleSearch = () => {
     id: "",
   };
 };
-
 // endregion
 
 // region 获取用户表数据
@@ -108,7 +106,7 @@ const pageChange = (page: number) => {
 };
 // 总记录数
 const total = ref();
-const columns = [
+const columns: Array<any> = [
   {
     title: "ID",
     dataIndex: "id",

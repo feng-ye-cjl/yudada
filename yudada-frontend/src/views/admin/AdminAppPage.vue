@@ -3,7 +3,7 @@
     <!--搜索列表-->
     <a-form
       :model="form"
-      :layout="layout"
+      layout="inline"
       @keydown.enter="handleSearch"
       style="margin-bottom: 20px"
     >
@@ -103,6 +103,7 @@ import { Message } from "@arco-design/web-vue";
 import dayjs from "dayjs";
 import {
   deleteAppUsingPost,
+  doAppReviewUsingPost,
   listAppByPageUsingPost,
 } from "@/api/appController";
 import {
@@ -112,7 +113,6 @@ import {
 } from "@/constant/app";
 
 // region 搜索表单
-const layout = ref("inline");
 const form = ref({
   appName: "",
   appDesc: "",
@@ -146,7 +146,7 @@ const pageChange = (page: number) => {
 };
 // 总记录数
 const total = ref();
-const columns = [
+const columns: Array<any> = [
   {
     title: "应用名称",
     dataIndex: "appName",
@@ -250,8 +250,56 @@ const handleOptionChange = async (option: string, id: number) => {
     await deleteApp(id);
   } else if (option === "通过") {
     console.log("pass");
+    await reviewApp(id, "审核通过", 1);
   } else if (option === "拒绝") {
     console.log("reject");
+    await reviewApp(id, "审核未通过", 2);
+  }
+};
+
+/**
+ * 审核应用
+ * @param id
+ * @param reviewMessage
+ * @param reviewStatus
+ */
+const reviewApp = async (
+  id: number,
+  reviewMessage: string,
+  reviewStatus: number
+) => {
+  if (!id) {
+    return;
+  }
+  const res = await doAppReviewUsingPost({ id, reviewMessage, reviewStatus });
+  if (res.data.code === 0) {
+    if (reviewStatus === 1) {
+      Message.success("审核通过");
+    } else if (reviewStatus === 2) {
+      Message.success("改应用未过审核");
+    }
+    // 重新获取用户信息
+    await getAppList();
+  } else {
+    Message.error("审核失败，" + res.data.message);
+  }
+};
+
+/**
+ * 删除用户
+ * @param id
+ */
+const deleteApp = async (id: number) => {
+  if (!id) {
+    return;
+  }
+  const res = await deleteAppUsingPost({ id });
+  if (res.data.code === 0) {
+    Message.success("删除成功");
+    // 重新获取用户信息
+    await getAppList();
+  } else {
+    Message.error("删除失败，" + res.data.message);
   }
 };
 
@@ -273,24 +321,6 @@ const getAppList = async () => {
     item.option = "";
   });
   console.log("appList = ", appList.value);
-};
-
-/**
- * 删除用户
- * @param id
- */
-const deleteApp = async (id: number) => {
-  if (!id) {
-    return;
-  }
-  const res = await deleteAppUsingPost({ id });
-  if (res.data.code === 0) {
-    Message.success("删除成功");
-    // 重新获取用户信息
-    await getAppList();
-  } else {
-    Message.error("删除失败，" + res.data.message);
-  }
 };
 
 watchEffect(() => {
