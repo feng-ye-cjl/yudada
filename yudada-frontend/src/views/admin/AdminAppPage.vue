@@ -61,35 +61,50 @@
           >{{ REVIEW_STATUS_MAP[record.reviewStatus] }}
         </a-tag>
       </template>
+      <template #reviewTime="{ record }">
+        <span>
+          {{
+            record.reviewTime ? dayjs(record.reviewTime).format("YY/MM/DD") : ""
+          }}
+        </span>
+      </template>
       <template #createTime="{ record }">
         <span>
-          {{ dayjs(record.createTime).format("YYYY-MM-DD") }}
+          {{ dayjs(record.createTime).format("YY/MM/DD") }}
         </span>
       </template>
       <template #updateTime="{ record }">
         <span>
-          {{ dayjs(record.updateTime).format("YYYY-MM-DD") }}
+          {{ dayjs(record.updateTime).format("YY/MM/DD") }}
         </span>
       </template>
       <template #option="{ record }">
-        <a-button
-          type="primary"
-          size="mini"
-          status="danger"
-          @click="deleteUser(record.id)"
-          >删除
-        </a-button>
+        <a-select
+          v-model="record.option"
+          :style="{ width: '78px' }"
+          placeholder="操作"
+          :trigger-props="{ autoFitPopupMinWidth: true }"
+          @change="handleOptionChange(record.option, record.id)"
+        >
+          <a-option
+            v-for="item in optionList"
+            v-show="optionIsShow(record.reviewStatus, item)"
+            :key="item"
+            >{{ item }}
+          </a-option>
+        </a-select>
       </template>
     </a-table>
   </div>
 </template>
 <script setup lang="ts">
 import { ref, watchEffect } from "vue";
-import { deleteUserUsingPost } from "@/api/userController";
-import API from "@/api";
 import { Message } from "@arco-design/web-vue";
 import dayjs from "dayjs";
-import { listAppByPageUsingPost } from "@/api/appController";
+import {
+  deleteAppUsingPost,
+  listAppByPageUsingPost,
+} from "@/api/appController";
 import {
   APP_SCORING_STRATEGY_MAP,
   APP_TYPE_MAP,
@@ -141,6 +156,8 @@ const columns = [
     title: "应用描述",
     dataIndex: "appDesc",
     align: "center",
+    ellipsis: true,
+    tooltip: true,
   },
   {
     title: "应用图标",
@@ -178,7 +195,10 @@ const columns = [
   {
     title: "审核时间",
     dataIndex: "reviewTime",
+    slotName: "reviewTime",
     align: "center",
+    ellipsis: true,
+    tooltip: true,
   },
   {
     title: "创建用户 ID",
@@ -190,16 +210,56 @@ const columns = [
     dataIndex: "createTime",
     slotName: "createTime",
     align: "center",
+    ellipsis: true,
+    tooltip: true,
   },
   {
     title: "更新时间",
     dataIndex: "updateTime",
     slotName: "updateTime",
     align: "center",
+    ellipsis: true,
+    tooltip: true,
+  },
+  {
+    title: "操作",
+    slotName: "option",
+    align: "center",
+    width: 100,
   },
 ];
 
-const appList = ref<API.App[]>();
+// 操作列表
+const optionList = ["通过", "拒绝", "删除"];
+
+const optionIsShow = (status: number, option: string) => {
+  if (status === 1) {
+    if (option === "通过") {
+      return false;
+    }
+  } else if (status === 2) {
+    if (option === "拒绝") {
+      return false;
+    }
+  }
+  return true;
+};
+
+const handleOptionChange = async (option: string, id: number) => {
+  if (option === "删除") {
+    await deleteApp(id);
+  } else if (option === "通过") {
+    console.log("pass");
+  } else if (option === "拒绝") {
+    console.log("reject");
+  }
+};
+
+// app列表
+const appList = ref();
+/**
+ * 获取应用列表
+ */
 const getAppList = async () => {
   const res = await listAppByPageUsingPost(searchParams.value);
   if (res.data?.code === 0) {
@@ -208,17 +268,22 @@ const getAppList = async () => {
   } else {
     Message.error(res.data.message as string);
   }
+  // 给appList添加对应的操作列表
+  appList.value.forEach((item: any) => {
+    item.option = "";
+  });
+  console.log("appList = ", appList.value);
 };
 
 /**
  * 删除用户
  * @param id
  */
-const deleteUser = async (id: number) => {
+const deleteApp = async (id: number) => {
   if (!id) {
     return;
   }
-  const res = await deleteUserUsingPost({ id });
+  const res = await deleteAppUsingPost({ id });
   if (res.data.code === 0) {
     Message.success("删除成功");
     // 重新获取用户信息

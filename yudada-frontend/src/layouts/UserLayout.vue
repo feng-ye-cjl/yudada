@@ -46,7 +46,7 @@
 
   .content {
     margin-bottom: 16px;
-    padding: 20px;
+    padding: 80px 20px;
   }
 
   .footer {

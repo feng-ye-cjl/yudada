@@ -53,13 +53,9 @@
         </span>
       </template>
       <template #option="{ record }">
-        <a-button
-          type="primary"
-          size="mini"
-          status="danger"
-          @click="deleteUser(record.id)"
-          >删除
-        </a-button>
+        <a-popconfirm content="是否确定删除？" @ok="deleteUser(record.id)">
+          <a-button size="mini" status="danger">删除</a-button>
+        </a-popconfirm>
       </template>
     </a-table>
   </div>
