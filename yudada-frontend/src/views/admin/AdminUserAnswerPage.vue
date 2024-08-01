@@ -1,200 +1,260 @@
 <template>
-  <div id="adminUserPage">
-    <!--搜索列表-->
-    <a-form :model="form" :layout="layout" @keydown.enter="handleSearch">
-      <a-form-item field="post" label="用户Id">
-        <!--<a-input v-model="form.id" placeholder="请输入用户Id" />-->
-        <a-input-number
-          v-model="form.id"
-          placeholder="请输入用户Id"
-          class="input-demo"
-        />
-      </a-form-item>
-      <a-form-item field="name" label="用户名">
-        <a-input v-model="form.userName" placeholder="请输入用户名" />
-      </a-form-item>
-      <a-form-item>
-        <a-button @click="handleSearch" type="primary">
-          <icon-search style="margin-right: 10px" />
-          搜索
-        </a-button>
-      </a-form-item>
-    </a-form>
-    <!--员工数据表格-->
-    <a-table
-      :columns="columns"
-      :data="userList"
-      :pagination="{
-        showTotal: true,
-        current: searchParams.current,
-        pageSize: searchParams.pageSize,
-        total,
-      }"
-      @page-change="pageChange"
-    >
-      <template #userAvatar="{ record }">
-        <a-avatar>
-          <img alt="avatar" :src="record.userAvatar" />
-        </a-avatar>
-      </template>
-      <template #createTime="{ record }">
-        <span>
-          {{ dayjs(record.createTime).format("YYYY-MM-DD HH:mm:ss") }}
-        </span>
-      </template>
-      <template #updateTime="{ record }">
-        <span>
-          {{ dayjs(record.updateTime).format("YYYY-MM-DD HH:mm:ss") }}
-        </span>
-      </template>
-      <template #option="{ record }">
-        <a-button
-          type="primary"
-          size="mini"
-          status="danger"
-          @click="deleteUser(record.id)"
-          >删除
-        </a-button>
-      </template>
-    </a-table>
-  </div>
+  <a-form
+    :model="formSearchParams"
+    :style="{ marginBottom: '20px' }"
+    layout="inline"
+    @submit="doSearch"
+  >
+    <a-form-item field="resultName" label="结果名称">
+      <a-input
+        v-model="formSearchParams.resultName"
+        placeholder="请输入结果名称"
+        allow-clear
+      />
+    </a-form-item>
+    <a-form-item field="resultDesc" label="结果描述">
+      <a-input
+        v-model="formSearchParams.resultDesc"
+        placeholder="请输入结果描述"
+        allow-clear
+      />
+    </a-form-item>
+    <a-form-item field="appId" label="应用 id">
+      <a-input
+        v-model="formSearchParams.appId"
+        placeholder="请输入应用 id"
+        allow-clear
+      />
+    </a-form-item>
+    <a-form-item field="userId" label="用户 id">
+      <a-input
+        v-model="formSearchParams.userId"
+        placeholder="请输入用户 id"
+        allow-clear
+      />
+    </a-form-item>
+    <a-form-item>
+      <a-button type="primary" html-type="submit" style="width: 100px">
+        搜索
+      </a-button>
+    </a-form-item>
+  </a-form>
+  <a-table
+    :columns="columns"
+    :data="dataList"
+    :pagination="{
+      showTotal: true,
+      pageSize: searchParams.pageSize,
+      current: searchParams.current,
+      total,
+    }"
+    @page-change="onPageChange"
+  >
+    <template #resultPicture="{ record }">
+      <a-image width="64" :src="record.resultPicture" />
+    </template>
+    <template #appType="{ record }">
+      {{ APP_TYPE_MAP[record.appType] }}
+    </template>
+    <template #scoringStrategy="{ record }">
+      {{ APP_SCORING_STRATEGY_MAP[record.scoringStrategy] }}
+    </template>
+    <template #createTime="{ record }">
+      {{ dayjs(record.createTime).format("YYYY-MM-DD HH:mm:ss") }}
+    </template>
+    <template #updateTime="{ record }">
+      {{ dayjs(record.updateTime).format("YYYY-MM-DD HH:mm:ss") }}
+    </template>
+    <template #optional="{ record }">
+      <a-space>
+        <a-button status="danger" @click="doDelete(record)">删除</a-button>
+      </a-space>
+    </template>
+  </a-table>
 </template>
+
 <script setup lang="ts">
 import { ref, watchEffect } from "vue";
 import {
-  deleteUserUsingPost,
-  listUserByPageUsingPost,
-} from "@/api/userController";
+  deleteUserAnswerUsingPost,
+  listUserAnswerByPageUsingPost,
+} from "@/api/userAnswerController";
 import API from "@/api";
-import { Message } from "@arco-design/web-vue";
-import dayjs from "dayjs";
+import message from "@arco-design/web-vue/es/message";
+import { dayjs } from "@arco-design/web-vue/es/_utils/date";
+import { APP_SCORING_STRATEGY_MAP, APP_TYPE_MAP } from "@/constant/app";
 
-// region 搜索表单
-const layout = ref("inline");
-const form = ref({
-  userName: "",
-  id: "",
-});
-// 搜索方法
-const handleSearch = () => {
-  searchParams.value = {
-    // 传入初始分页数据和查询数据
-    ...form.value,
-    ...iniSearchParams,
-  };
-  // 清空数据框
-  form.value = {
-    userName: "",
-    id: "",
-  };
-};
+const formSearchParams = ref<API.UserAnswerQueryRequest>({});
 
-// endregion
-
-// region 获取用户表数据
-// 初始分页参数（不可修改）
-const iniSearchParams = {
+// 初始化搜索条件（不应该被修改）
+const initSearchParams = {
   current: 1,
   pageSize: 10,
 };
 
-const searchParams = ref({
-  ...iniSearchParams,
+const searchParams = ref<API.UserAnswerQueryRequest>({
+  ...initSearchParams,
 });
-// 分页改变方法
-const pageChange = (page: number) => {
-  searchParams.value.current = page;
+const dataList = ref<API.UserAnswer[]>([]);
+const total = ref<number>(0);
+
+/**
+ * 加载数据
+ */
+const loadData = async () => {
+  const res = await listUserAnswerByPageUsingPost(searchParams.value);
+  if (res.data.code === 0) {
+    dataList.value = res.data.data?.records || [];
+    total.value = res.data.data?.total || 0;
+  } else {
+    message.error("获取数据失败，" + res.data.message);
+  }
 };
-// 总记录数
-const total = ref();
+
+/**
+ * 执行搜索
+ */
+const doSearch = () => {
+  searchParams.value = {
+    ...initSearchParams,
+    ...formSearchParams.value,
+  };
+};
+
+/**
+ * 当分页变化时，改变搜索条件，触发数据加载
+ * @param page
+ */
+const onPageChange = (page: number) => {
+  searchParams.value = {
+    ...searchParams.value,
+    current: page,
+  };
+};
+
+/**
+ * 删除
+ * @param record
+ */
+const doDelete = async (record: API.UserAnswer) => {
+  if (!record.id) {
+    return;
+  }
+
+  const res = await deleteUserAnswerUsingPost({
+    id: record.id,
+  });
+  if (res.data.code === 0) {
+    loadData();
+  } else {
+    message.error("删除失败，" + res.data.message);
+  }
+};
+
+/**
+ * 监听 searchParams 变量，改变时触发数据的重新加载
+ */
+watchEffect(() => {
+  loadData();
+});
+
+// 表格列配置
 const columns = [
   {
-    title: "ID",
+    title: "id",
     dataIndex: "id",
     align: "center",
+    ellipsis: true,
+    tooltip: true,
   },
   {
-    title: "账号",
-    dataIndex: "userAccount",
+    title: "选项",
+    dataIndex: "choices",
+    align: "center",
+    ellipsis: true,
+    tooltip: true,
+  },
+  {
+    title: "结果 id",
+    dataIndex: "resultId",
+    align: "center",
+    ellipsis: true,
+    tooltip: true,
+  },
+  {
+    title: "名称",
+    dataIndex: "resultName",
     align: "center",
   },
   {
-    title: "用户名",
-    dataIndex: "userName",
+    title: "描述",
+    dataIndex: "resultDesc",
+    align: "center",
+    ellipsis: true,
+    tooltip: true,
+  },
+  {
+    title: "图片",
+    dataIndex: "resultPicture",
+    slotName: "resultPicture",
     align: "center",
   },
   {
-    title: "头像",
-    dataIndex: "userAvatar",
-    slotName: "userAvatar",
+    title: "得分",
+    dataIndex: "resultScore",
     align: "center",
+    ellipsis: true,
+    tooltip: true,
   },
   {
-    title: "用户简介",
-    dataIndex: "userProfile",
+    title: "应用 id",
+    dataIndex: "appId",
     align: "center",
+    ellipsis: true,
+    tooltip: true,
   },
   {
-    title: "角色",
-    dataIndex: "userRole",
+    title: "应用类型",
+    dataIndex: "appType",
+    slotName: "appType",
     align: "center",
+    ellipsis: true,
+    tooltip: true,
+  },
+  {
+    title: "评分策略",
+    dataIndex: "scoringStrategy",
+    slotName: "scoringStrategy",
+    align: "center",
+    ellipsis: true,
+    tooltip: true,
+  },
+  {
+    title: "用户 id",
+    dataIndex: "userId",
+    align: "center",
+    ellipsis: true,
+    tooltip: true,
   },
   {
     title: "创建时间",
     dataIndex: "createTime",
     slotName: "createTime",
     align: "center",
+    ellipsis: true,
+    tooltip: true,
   },
   {
     title: "更新时间",
     dataIndex: "updateTime",
     slotName: "updateTime",
     align: "center",
+    ellipsis: true,
+    tooltip: true,
   },
   {
     title: "操作",
-    slotName: "option",
-    align: "center",
+    slotName: "optional",
   },
 ];
-
-const userList = ref<API.User[]>();
-const getUserInfo = async () => {
-  const res = await listUserByPageUsingPost(searchParams.value);
-  if (res.data?.code === 0) {
-    userList.value = res.data.data?.records || [];
-    total.value = Number(res.data.data?.total) || 0;
-  } else {
-    Message.error(res.data.message as string);
-  }
-};
-
-/**
- * 删除用户
- * @param id
- */
-const deleteUser = async (id: number) => {
-  if (!id) {
-    return;
-  }
-  const res = await deleteUserUsingPost({ id });
-  if (res.data.code === 0) {
-    Message.success("删除成功");
-    // 重新获取用户信息
-    await getUserInfo();
-  } else {
-    Message.error("删除失败，" + res.data.message);
-  }
-};
-
-watchEffect(() => {
-  getUserInfo();
-});
-// endregion
 </script>
-<style scoped>
-#adminUserPage {
-  width: 85vw;
-  margin: 0 auto;
-}
-</style>

@@ -17,7 +17,7 @@ export const useLoginUserStore = defineStore("loginUser", () => {
    */
   const fetchLoginUser = async () => {
     const res = await getLoginUserUsingGet();
-    console.log("login user = ", res.data);
+    // console.log("login user = ", res.data);
     if (res.data.code === 0 && res.data.data) {
       loginUser.value = res.data.data;
     } else {

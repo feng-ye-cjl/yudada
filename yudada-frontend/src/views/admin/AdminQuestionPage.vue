@@ -1,61 +1,96 @@
 <template>
-  <a-form
-    :model="formSearchParams"
-    :style="{ marginBottom: '20px' }"
-    layout="inline"
-    @submit="doSearch"
-  >
-    <a-form-item field="appId" label="应用 id">
-      <a-input
-        v-model="formSearchParams.appId"
-        placeholder="请输入应用 id"
-        allow-clear
-      />
-    </a-form-item>
-    <a-form-item field="userId" label="用户 id">
-      <a-input
-        v-model="formSearchParams.userId"
-        placeholder="请输入用户 id"
-        allow-clear
-      />
-    </a-form-item>
-    <a-form-item>
-      <a-button type="primary" html-type="submit" style="width: 100px">
-        搜索
-      </a-button>
-    </a-form-item>
-  </a-form>
-  <a-table
-    :columns="columns"
-    :data="dataList"
-    :pagination="{
-      showTotal: true,
-      pageSize: searchParams.pageSize,
-      current: searchParams.current,
-      total,
-    }"
-    @page-change="onPageChange"
-  >
-    <template #questionContent="{ record }">
-      <div
-        v-for="question in JSON.parse(record.questionContent)"
-        :key="question.title"
-      >
-        {{ question }}
+  <div id="adminQuestionPage">
+    <a-form
+      :model="formSearchParams"
+      :style="{ marginBottom: '20px' }"
+      layout="inline"
+      @submit="doSearch"
+    >
+      <a-form-item field="appId" label="应用 id">
+        <a-input
+          v-model="formSearchParams.appId"
+          placeholder="请输入应用 id"
+          allow-clear
+        />
+      </a-form-item>
+      <a-form-item field="userId" label="用户 id">
+        <a-input
+          v-model="formSearchParams.userId"
+          placeholder="请输入用户 id"
+          allow-clear
+        />
+      </a-form-item>
+      <a-form-item>
+        <a-button type="primary" html-type="submit" style="width: 100px">
+          搜索
+        </a-button>
+      </a-form-item>
+    </a-form>
+    <a-table
+      :columns="columns"
+      :data="dataList"
+      :pagination="{
+        showTotal: true,
+        pageSize: searchParams.pageSize,
+        current: searchParams.current,
+        total,
+      }"
+      @page-change="onPageChange"
+    >
+      <template #questionContent="{ record }">
+        <a-button type="outline" size="mini" @click="getContent(record)"
+          >查看题目
+        </a-button>
+        <!--{{ record.questionContent }}-->
+      </template>
+      <template #createTime="{ record }">
+        {{ dayjs(record.createTime).format("YYYY-MM-DD HH:mm:ss") }}
+      </template>
+      <template #updateTime="{ record }">
+        {{ dayjs(record.updateTime).format("YYYY-MM-DD HH:mm:ss") }}
+      </template>
+      <template #optional="{ record }">
+        <a-space>
+          <a-button status="danger" size="mini" @click="doDelete(record)"
+            >删除
+          </a-button>
+        </a-space>
+      </template>
+    </a-table>
+    <!--题目内容-->
+    <a-modal
+      v-model:visible="contentVisible"
+      @ok="handleOk"
+      @cancel="handleCancel"
+      :footer="false"
+    >
+      <template #title> Title</template>
+      <div style="height: 400px">
+        <a-list
+          v-for="(item, index) in currentContent"
+          :key="item.title"
+          style="margin-bottom: 20px"
+        >
+          <template #header>
+            <span v-if="item.title.split('.').length === 1"
+              >{{ index + 1 }}.</span
+            >
+            {{ item.title }}
+          </template>
+          <a-list-item v-for="option in item.options" :key="option">
+            <span style="float: left">
+              {{ option.key }}、 {{ option.value }}</span
+            >
+            <span style="float: right" v-if="option.result"
+              >属性：
+              <a-tag color="blue" bordered>{{ option.result }}</a-tag></span
+            >
+            <span style="float: right" v-else>得分：{{ option.score }}</span>
+          </a-list-item>
+        </a-list>
       </div>
-    </template>
-    <template #createTime="{ record }">
-      {{ dayjs(record.createTime).format("YYYY-MM-DD HH:mm:ss") }}
-    </template>
-    <template #updateTime="{ record }">
-      {{ dayjs(record.updateTime).format("YYYY-MM-DD HH:mm:ss") }}
-    </template>
-    <template #optional="{ record }">
-      <a-space>
-        <a-button status="danger" @click="doDelete(record)">删除</a-button>
-      </a-space>
-    </template>
-  </a-table>
+    </a-modal>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -68,6 +103,7 @@ import API from "@/api";
 import message from "@arco-design/web-vue/es/message";
 import { dayjs } from "@arco-design/web-vue/es/_utils/date";
 
+// region 题目表格数据
 const formSearchParams = ref<API.QuestionQueryRequest>({});
 
 // 初始化搜索条件（不应该被修改）
@@ -147,33 +183,74 @@ const columns = [
   {
     title: "id",
     dataIndex: "id",
+    align: "center",
   },
   {
-    title: "题目内容",
+    title: "题目列表",
     dataIndex: "questionContent",
     slotName: "questionContent",
+    align: "center",
   },
   {
     title: "应用 id",
     dataIndex: "appId",
+    align: "center",
   },
   {
     title: "用户 id",
     dataIndex: "userId",
+    align: "center",
   },
   {
     title: "创建时间",
     dataIndex: "createTime",
     slotName: "createTime",
+    align: "center",
   },
   {
     title: "更新时间",
     dataIndex: "updateTime",
     slotName: "updateTime",
+    align: "center",
   },
   {
     title: "操作",
     slotName: "optional",
+    align: "center",
   },
 ];
+
+// endregion question
+
+// region 题目内容
+// 当前题目详情
+const currentContent = ref();
+// 查看详情内容
+const getContent = (record: any) => {
+  contentVisible.value = true;
+  currentContent.value = JSON.parse(record.questionContent);
+  console.log(record);
+  // todo 根据id查询app信息
+  console.log(currentContent.value);
+};
+
+const contentVisible = ref(false);
+const handleOk = () => {
+  contentVisible.value = false;
+};
+const handleCancel = () => {
+  contentVisible.value = false;
+};
+// endregion
 </script>
+<style lang="scss" scoped>
+#adminQuestionPage {
+  .arco-list-header {
+    background-color: #42b983 !important;
+  }
+
+  .arco-modal-footer {
+    text-align: center !important;
+  }
+}
+</style>

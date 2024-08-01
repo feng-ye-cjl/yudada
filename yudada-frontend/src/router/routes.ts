@@ -4,19 +4,19 @@ import UserLoginPage from "@/views/user/UserLoginPage.vue";
 import UserRegisterPage from "@/views/user/UserRegisterPage.vue";
 import HelloWorld from "@/components/HelloWorld.vue";
 import accessEnum from "@/access/accessEnum";
-import AboutView from "@/views/AboutView.vue";
 import AdminUserPage from "@/views/admin/AdminUserPage.vue";
 import NoAuth from "@/components/NoAuth.vue";
 import AdminAppPage from "@/views/admin/AdminAppPage.vue";
 import AdminQuestionPage from "@/views/admin/AdminQuestionPage.vue";
 import AdminScoringResultPage from "@/views/admin/AdminScoringResultPage.vue";
 import AdminUserAnswerPage from "@/views/admin/AdminUserAnswerPage.vue";
+import HomePage from "@/views/HomePage.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
-    name: "首页",
-    component: AboutView,
+    name: "主页",
+    component: HomePage,
   },
   {
     path: "/admin/user",
