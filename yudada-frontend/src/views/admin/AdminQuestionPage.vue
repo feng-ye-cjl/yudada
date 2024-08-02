@@ -41,7 +41,12 @@
         <a-button type="outline" size="mini" @click="getContent(record)"
           >查看题目
         </a-button>
-        <!--{{ record.questionContent }}-->
+      </template>
+      <template #appName="{ record }">
+        {{ record.app.appName }}
+      </template>
+      <template #userName="{ record }">
+        {{ record.user.userName }}
       </template>
       <template #createTime="{ record }">
         {{ dayjs(record.createTime).format("YYYY-MM-DD HH:mm:ss") }}
@@ -64,7 +69,7 @@
       @cancel="handleCancel"
       :footer="false"
     >
-      <template #title> Title</template>
+      <template #title>{{ currentAppName }}</template>
       <div style="height: 400px">
         <a-list
           v-for="(item, index) in currentContent"
@@ -97,7 +102,7 @@
 import { ref, watchEffect } from "vue";
 import {
   deleteQuestionUsingPost,
-  listQuestionByPageUsingPost,
+  listQuestionVoByPageUsingPost,
 } from "@/api/questionController";
 import API from "@/api";
 import message from "@arco-design/web-vue/es/message";
@@ -115,20 +120,64 @@ const initSearchParams = {
 const searchParams = ref<API.QuestionQueryRequest>({
   ...initSearchParams,
 });
-const dataList = ref<API.Question[]>([]);
+const dataList = ref<API.QuestionVO>();
 const total = ref<number>(0);
+
+// 表格列配置
+const columns = [
+  {
+    title: "id",
+    dataIndex: "id",
+    align: "center",
+  },
+  {
+    title: "题目列表",
+    dataIndex: "questionContent",
+    slotName: "questionContent",
+    align: "center",
+  },
+  {
+    title: "应用",
+    slotName: "appName",
+    align: "center",
+  },
+  {
+    title: "用户",
+    slotName: "userName",
+    align: "center",
+  },
+  {
+    title: "创建时间",
+    dataIndex: "createTime",
+    slotName: "createTime",
+    align: "center",
+  },
+  {
+    title: "更新时间",
+    dataIndex: "updateTime",
+    slotName: "updateTime",
+    align: "center",
+  },
+  {
+    title: "操作",
+    slotName: "optional",
+    align: "center",
+  },
+];
 
 /**
  * 加载数据
  */
 const loadData = async () => {
-  const res = await listQuestionByPageUsingPost(searchParams.value);
+  // const res = await listQuestionByPageUsingPost(searchParams.value);
+  const res = await listQuestionVoByPageUsingPost(searchParams.value);
   if (res.data.code === 0) {
     dataList.value = res.data.data?.records || [];
     total.value = res.data.data?.total || 0;
   } else {
     message.error("获取数据失败，" + res.data.message);
   }
+  console.log("dataList = ", dataList.value);
 };
 
 /**
@@ -178,57 +227,18 @@ watchEffect(() => {
   loadData();
 });
 
-// 表格列配置
-const columns = [
-  {
-    title: "id",
-    dataIndex: "id",
-    align: "center",
-  },
-  {
-    title: "题目列表",
-    dataIndex: "questionContent",
-    slotName: "questionContent",
-    align: "center",
-  },
-  {
-    title: "应用 id",
-    dataIndex: "appId",
-    align: "center",
-  },
-  {
-    title: "用户 id",
-    dataIndex: "userId",
-    align: "center",
-  },
-  {
-    title: "创建时间",
-    dataIndex: "createTime",
-    slotName: "createTime",
-    align: "center",
-  },
-  {
-    title: "更新时间",
-    dataIndex: "updateTime",
-    slotName: "updateTime",
-    align: "center",
-  },
-  {
-    title: "操作",
-    slotName: "optional",
-    align: "center",
-  },
-];
-
 // endregion question
 
 // region 题目内容
 // 当前题目详情
 const currentContent = ref();
+// 当前app名称
+const currentAppName = ref();
 // 查看详情内容
 const getContent = (record: any) => {
   contentVisible.value = true;
-  currentContent.value = JSON.parse(record.questionContent);
+  currentContent.value = record.questionContent;
+  currentAppName.value = record.app.appName;
   console.log(record);
   // todo 根据id查询app信息
   console.log(currentContent.value);

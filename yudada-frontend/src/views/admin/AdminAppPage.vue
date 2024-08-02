@@ -233,8 +233,54 @@ const columns: Array<any> = [
   },
 ];
 
+// app列表
+const appList = ref();
+// 列表加载
+const isLoading = ref(false);
+/**
+ * 获取应用列表
+ */
+const getAppList = async () => {
+  isLoading.value = true;
+  const res = await listAppByPageUsingPost(searchParams.value);
+  if (res.data?.code === 0) {
+    appList.value = res.data.data?.records || [];
+    total.value = Number(res.data.data?.total) || 0;
+  } else {
+    Message.error(res.data.message as string);
+  }
+  // 给appList添加对应的操作列表
+  appList.value.forEach((item: any) => {
+    item.option = "";
+  });
+  isLoading.value = false;
+  console.log("appList = ", appList.value);
+};
+
+watchEffect(() => {
+  getAppList();
+});
+
 // 操作列表
 const optionList = ["通过", "拒绝", "删除"];
+
+/**
+ * 删除用户
+ * @param id
+ */
+const deleteApp = async (id: number) => {
+  if (!id) {
+    return;
+  }
+  const res = await deleteAppUsingPost({ id });
+  if (res.data.code === 0) {
+    Message.success("删除成功");
+    // 重新获取用户信息
+    await getAppList();
+  } else {
+    Message.error("删除失败，" + res.data.message);
+  }
+};
 
 const optionIsShow = (status: number, option: string) => {
   if (status === 1) {
@@ -288,55 +334,6 @@ const reviewApp = async (
     Message.error("审核失败，" + res.data.message);
   }
 };
-
-/**
- * 删除用户
- * @param id
- */
-const deleteApp = async (id: number) => {
-  if (!id) {
-    return;
-  }
-  const res = await deleteAppUsingPost({ id });
-  if (res.data.code === 0) {
-    Message.success("删除成功");
-    // 重新获取用户信息
-    await getAppList();
-  } else {
-    Message.error("删除失败，" + res.data.message);
-  }
-};
-
-// app列表
-const appList = ref();
-// 列表加载
-const isLoading = ref(false);
-/**
- * 获取应用列表
- */
-const getAppList = async () => {
-  isLoading.value = true;
-  const res = await listAppByPageUsingPost(searchParams.value);
-  if (res.data?.code === 0) {
-    appList.value = res.data.data?.records || [];
-    total.value = Number(res.data.data?.total) || 0;
-  } else {
-    Message.error(res.data.message as string);
-  }
-  // 给appList添加对应的操作列表
-  appList.value.forEach((item: any) => {
-    item.option = "";
-  });
-  setTimeout(() => {
-    console.log("延时操作");
-  }, 3000);
-  isLoading.value = false;
-  console.log("appList = ", appList.value);
-};
-
-watchEffect(() => {
-  getAppList();
-});
 // endregion
 </script>
 <style scoped>

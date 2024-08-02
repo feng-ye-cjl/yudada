@@ -33,8 +33,6 @@ import java.util.stream.Collectors;
 
 /**
  * 题目服务实现
- *
- *
  */
 @Service
 @Slf4j
@@ -160,7 +158,6 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         Set<Long> userIdSet = questionList.stream().map(Question::getUserId).collect(Collectors.toSet());
         Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
                 .collect(Collectors.groupingBy(User::getId));
-        // 填充信息
         questionVOList.forEach(questionVO -> {
             Long userId = questionVO.getUserId();
             User user = null;
@@ -168,6 +165,17 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
                 user = userIdUserListMap.get(userId).get(0);
             }
             questionVO.setUser(userService.getUserVO(user));
+        });
+        // 2.关联查询app信息
+        List<Long> appIdSet = questionList.stream().map(Question::getAppId).collect(Collectors.toList());
+        Map<Long, List<App>> appIdAppListMap = appService.listByIds(appIdSet).stream().collect(Collectors.groupingBy(App::getId));
+        questionVOList.forEach(questionVO -> {
+            Long appId = questionVO.getAppId();
+            App app = null;
+            if (appIdAppListMap.containsKey(appId)) {
+                app = appIdAppListMap.get(appId).get(0);
+            }
+            questionVO.setApp(app);
         });
         // endregion
 

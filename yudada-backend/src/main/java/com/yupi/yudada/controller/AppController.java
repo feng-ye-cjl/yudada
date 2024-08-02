@@ -135,7 +135,7 @@ public class AppController {
         App app = appService.getById(id);
         ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
         // 获取封装类
-        return ResultUtils.success(appService.getAppVO(app, request));
+        return ResultUtils.success(appService.getAppVO(app));
     }
 
     /**

@@ -137,11 +137,10 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
      * 获取应用封装
      *
      * @param app
-     * @param request
      * @return
      */
     @Override
-    public AppVO getAppVO(App app, HttpServletRequest request) {
+    public AppVO getAppVO(App app) {
         // 对象转封装类
         AppVO appVO = AppVO.objToVo(app);
 

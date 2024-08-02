@@ -11,6 +11,7 @@ import AdminQuestionPage from "@/views/admin/AdminQuestionPage.vue";
 import AdminScoringResultPage from "@/views/admin/AdminScoringResultPage.vue";
 import AdminUserAnswerPage from "@/views/admin/AdminUserAnswerPage.vue";
 import HomePage from "@/views/HomePage.vue";
+import AppDetailPage from "@/views/app/AppDetailPage.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -56,6 +57,15 @@ export const routes: Array<RouteRecordRaw> = [
     component: AdminUserAnswerPage,
     meta: {
       access: accessEnum.ADMIN,
+    },
+  },
+  {
+    path: "/app/detail/:id",
+    name: "应用详情",
+    props: true, // 将路由参数作为组件的属性传递
+    component: AppDetailPage,
+    meta: {
+      hideInMenu: true,
     },
   },
   {

@@ -36,10 +36,9 @@ public interface AppService extends IService<App> {
      * 获取应用封装
      *
      * @param app
-     * @param request
      * @return
      */
-    AppVO getAppVO(App app, HttpServletRequest request);
+    AppVO getAppVO(App app);
 
     /**
      * 分页获取应用封装
