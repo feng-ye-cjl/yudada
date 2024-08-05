@@ -12,6 +12,9 @@ import AdminScoringResultPage from "@/views/admin/AdminScoringResultPage.vue";
 import AdminUserAnswerPage from "@/views/admin/AdminUserAnswerPage.vue";
 import HomePage from "@/views/HomePage.vue";
 import AppDetailPage from "@/views/app/AppDetailPage.vue";
+import AddAppPage from "@/views/add/AddAppPage.vue";
+import AddQuestionPage from "@/views/add/AddQuestionPage.vue";
+import AddScoringResultPage from "@/views/add/AddScoringResultPage.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -62,8 +65,37 @@ export const routes: Array<RouteRecordRaw> = [
   {
     path: "/app/detail/:id",
     name: "应用详情",
-    props: true, // 将路由参数作为组件的属性传递
+    props: true,
     component: AppDetailPage,
+    meta: {
+      hideInMenu: true,
+    },
+  },
+  {
+    path: "/add/app",
+    name: "创建应用",
+    component: AddAppPage,
+  },
+  {
+    path: "/add/app/:id",
+    name: "修改应用",
+    props: true,
+    component: AddAppPage,
+  },
+  {
+    path: "/add/question/:appId",
+    name: "创建题目",
+    component: AddQuestionPage,
+    props: true,
+    meta: {
+      hideInMenu: true,
+    },
+  },
+  {
+    path: "/add/scoring_result/:appId",
+    name: "创建评分",
+    component: AddScoringResultPage,
+    props: true,
     meta: {
       hideInMenu: true,
     },
