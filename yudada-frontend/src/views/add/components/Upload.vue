@@ -50,9 +50,20 @@
 
 <script setup lang="ts">
 import { IconEdit, IconPlus } from "@arco-design/web-vue/es/icon";
-import { ref } from "vue";
+import { defineProps, ref, withDefaults } from "vue";
 
-const file = ref();
+interface Props {
+  icon?: string;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  icon: () => "",
+});
+console.log("icon = ", props.icon);
+
+const file = ref({
+  url: props.icon,
+});
 
 const onChange = (_, currentFile) => {
   file.value = {

@@ -191,7 +191,7 @@ watchEffect(() => {
 });
 // endregion
 </script>
-<style scoped>
+<style lang="scss" scoped>
 #adminUserPage {
 }
 </style>

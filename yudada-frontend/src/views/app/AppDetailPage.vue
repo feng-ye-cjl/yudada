@@ -1,7 +1,7 @@
 <template>
   <div id="appDetailPage">
-    <a-card>
-      <a-row style="max-width: 900px">
+    <a-card class="appCard">
+      <a-row>
         <a-col flex="auto" class="leftContent">
           <h2>{{ app?.appName }}</h2>
           <p>应用类型：{{ APP_TYPE_MAP[app?.appType] }}</p>
@@ -10,7 +10,7 @@
             作者：{{ app?.user.userName }}
             <a-avatar :size="24" :image-url="app?.user?.userAvatar" />
           </a-space>
-          <p>
+          <p style="margin-bottom: 80px">
             创建时间：{{ dayjs(app?.createTime).format("YYYY-MM-DD HH:mm:ss") }}
           </p>
           <a-space size="large">
@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import message from "@arco-design/web-vue/es/message";
-import { getAppVoByIdUsingGet } from "@/api/appController";
+import { deleteAppUsingPost, getAppVoByIdUsingGet } from "@/api/appController";
 import API from "@/api";
 import { APP_SCORING_STRATEGY_MAP, APP_TYPE_MAP } from "../../constant/app";
 import dayjs from "dayjs";
@@ -71,10 +71,12 @@ const getApp = async () => {
     message.warning("请选择应用");
     return;
   }
-  const id = Number(props.id);
-  const res = await getAppVoByIdUsingGet({ id });
+  console.log(props.id);
+  const res = await getAppVoByIdUsingGet({ id: props.id });
   if (res.data.code === 0) {
     app.value = res.data.data;
+  } else {
+    message.error(res.data.message as string);
   }
   console.log(app.value);
 };
@@ -91,6 +93,17 @@ watchEffect(() => {
 
 <style lang="scss" scoped>
 #appDetailPage {
+  .appCard {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 10px;
+  }
+
+  .leftContent {
+    padding-right: 20px;
+    border-right: 1px solid #e8e8e8;
+  }
+
   .leftContent > p {
     margin-bottom: 20px;
   }

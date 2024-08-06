@@ -29,7 +29,7 @@ import GlobalHeader from "@/components/GlobalHeader.vue";
   }
 
   .content {
-    max-width: 1280px;
+    width: 80vw;
     margin: 0 auto 36px;
     padding: 20px;
     background: linear-gradient(to right, #fefefe, #fff);

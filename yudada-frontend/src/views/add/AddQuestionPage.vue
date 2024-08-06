@@ -1,35 +1,30 @@
 <template>
-  <div id="userLoginPage">
-    <h2 style="margin-bottom: 16px">用户登录</h2>
-    <a-form
-      :model="form"
-      :style="{ width: '480px', margin: '0 auto' }"
-      label-align="left"
-      auto-label-width
-    >
-      <a-form-item field="userAccount" label="账号">
-        <a-input v-model="form.userAccount" placeholder="请输入账号" />
-      </a-form-item>
-      <a-form-item field="userPassword" tooltip="密码不小于 8 位" label="密码">
-        <a-input-password
-          v-model="form.userPassword"
-          placeholder="请输入密码"
-          @keydown.enter="handleSubmit"
-        />
-      </a-form-item>
-      <a-form-item>
-        <div
-          style="
-            display: flex;
-            width: 100%;
-            align-items: center;
-            justify-content: space-between;
-          "
-        >
-          <a-button type="primary" @click="handleSubmit" style="width: 120px">
-            登录
-          </a-button>
-          <a-link href="/user/register">新用户注册</a-link>
+  <div id="addQuestionPage">
+    <h2 style="margin-bottom: 16px">创建题目</h2>
+    <a-form :model="form" :style="{ width: '600px' }">
+      <a-form-item label="应用id"> {{ appId }}</a-form-item>
+      <a-form-item label="题目列表" :content-flex="false" :merge-props="false">
+        <a-button @click="addQuestion(questionList.length)"
+          >底部添加题目
+        </a-button>
+        <div v-for="(question, index) of questionList" :key="index">
+          <a-form-item field="name" label="Username">
+            <a-input
+              v-model="form.name"
+              placeholder="please enter your username..."
+            />
+          </a-form-item>
+          <a-form-item
+            v-for="(post, index) of form.posts"
+            :field="`posts[${index}].value`"
+            :label="`Post-${index}`"
+            :key="index"
+          >
+            <a-input
+              v-model="post.value"
+              placeholder="please enter your post..."
+            />
+          </a-form-item>
         </div>
       </a-form-item>
     </a-form>
@@ -37,39 +32,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { userLoginUsingPost } from "@/api/userController";
-import API from "@/api";
 import { useLoginUserStore } from "@/store/userStore";
-import { Message } from "@arco-design/web-vue";
 import { useRouter } from "vue-router";
+import { defineProps, reactive, ref, withDefaults } from "vue";
+import API from "@/api";
+
+interface Props {
+  appId: string;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  appId: "",
+});
 
 // userStore
 const userStore = useLoginUserStore();
 // 路由
 const router = useRouter();
+const form = reactive({
+  name: "",
+  posts: [{ value: "" }],
+});
 
-const form = ref({
-  userAccount: "",
-  userPassword: "",
-} as API.UserLoginRequest);
+const questionList = ref<API.QuestionContentDTO[]>([]);
 
 /**
- * 提交
+ * 添加题目
+ * @param index
  */
-const handleSubmit = async () => {
-  // console.log("用户登录");
-  // 用户登录
-  const res = await userLoginUsingPost(form.value);
-  // console.log("login res = ", res);
-  if (res.data.code === 0) {
-    console.log("login success");
-    // 获取登录用户
-    await userStore.fetchLoginUser();
-    Message.success("登录成功");
-    await router.push({ path: "/", replace: true });
-  } else {
-    Message.error(res.data.message as string);
-  }
+const addQuestion = (index: number) => {
+  questionList.value.splice(index, 0, { title: "", options: [] });
+};
+
+/**
+ * 删除题目
+ * @param index
+ */
+const deleteQuestion = (index: number) => {
+  questionList.value.splice(index, 1);
 };
 </script>
+<style lang="scss" scoped>
+#addQuestionPage {
+}
+</style>

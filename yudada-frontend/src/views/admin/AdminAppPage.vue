@@ -27,6 +27,7 @@
       </a-form>
       <!--员工数据表格-->
       <a-table
+        :width="100"
         :columns="columns"
         :data="appList"
         :pagination="{
@@ -37,6 +38,11 @@
         }"
         @page-change="pageChange"
       >
+        <template #appIcon="{ record }">
+          <a-avatar>
+            <img alt="avatar" :src="record.appIcon" />
+          </a-avatar>
+        </template>
         <template #appType="{ record }">
           <a-tag color="magenta" v-if="record.appType === 0"
             >{{ APP_TYPE_MAP[record.appType] }}
@@ -166,6 +172,7 @@ const columns: Array<any> = [
   {
     title: "应用图标",
     dataIndex: "appIcon",
+    slotName: "appIcon",
     align: "center",
   },
   {
@@ -338,7 +345,5 @@ const reviewApp = async (
 </script>
 <style scoped>
 #adminAppPage {
-  width: 85vw;
-  margin: 0 auto;
 }
 </style>
