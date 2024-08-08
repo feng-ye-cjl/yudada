@@ -260,44 +260,6 @@ const deleteOption = (question: API.QuestionContentDTO, index: number) => {
 
 const router = useRouter();
 
-/**
- * 创建题目
- */
-// const addNewQuestion = async () => {
-//   if (props.appId !== 0) {
-//     return;
-//   }
-//   const res = await addAppUsingPost(form.value);
-//   console.log(res);
-//   if (res.data.code === 0) {
-//     message.success("创建成功！即将跳转应用详情页");
-//     setTimeout(() => {
-//       router.push(`/app/detail/${res.data.data}`);
-//     }, 1500);
-//   } else {
-//     message.error("创建失败");
-//   }
-// };
-
-/**
- * 修改应用
- */
-// const updateApp = async () => {
-//   if (props.id === 0) {
-//     return;
-//   }
-//   const res = await updateAppUsingPost(form.value);
-//   console.log(res);
-//   if (res.data.code === 0) {
-//     message.success("修改成功！即将跳转应用详情页");
-//     setTimeout(() => {
-//       router.back();
-//     }, 1500);
-//   } else {
-//     message.error("修改失败");
-//   }
-// };
-
 // 老题目列表
 const oldQueston = ref<API.QuestionVO>();
 // 获取信息

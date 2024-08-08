@@ -38,7 +38,7 @@ import { REVIEW_STATUS_ENUM } from "@/constant/app";
 // 初始分页参数（不可修改）
 const iniSearchParams = {
   current: 1,
-  pageSize: 9,
+  pageSize: 8,
 };
 
 const searchParams = ref<API.AppQueryRequest>({
