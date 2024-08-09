@@ -106,6 +106,34 @@ export const routes: Array<RouteRecordRaw> = [
       hideInMenu: true,
     },
   },
+  // {
+  //   path: "/answer/do/:appId",
+  //   name: "答题",
+  //   component: DoAnswerPage,
+  //   props: true,
+  //   meta: {
+  //     hideInMenu: true,
+  //     access: accessEnum.USER,
+  //   },
+  // },
+  // {
+  //   path: "/answer/result/:id",
+  //   name: "答题结果",
+  //   component: AnswerResultPage,
+  //   props: true,
+  //   meta: {
+  //     hideInMenu: true,
+  //     access: accessEnum.USER,
+  //   },
+  // },
+  // {
+  //   path: "/answer/my",
+  //   name: "我的答题",
+  //   component: MyAnswerPage,
+  //   meta: {
+  //     access: accessEnum.USER,
+  //   },
+  // },
   {
     path: "/hide",
     name: "隐藏页面",

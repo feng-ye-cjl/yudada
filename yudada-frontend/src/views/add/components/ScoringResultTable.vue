@@ -38,7 +38,19 @@
     @page-change="onPageChange"
   >
     <template #resultPicture="{ record }">
-      <a-image width="64" :src="record.resultPicture" />
+      {{ record.resultPicture }}
+    </template>
+    <template #resultProp="{ record }">
+      <a-space size="mini">
+        <a-tag
+          size="mini"
+          bordered
+          color="orange"
+          v-for="item in JSON.parse(record.resultProp)"
+          :key="item"
+          >{{ item }}
+        </a-tag>
+      </a-space>
     </template>
     <template #createTime="{ record }">
       {{ dayjs(record.createTime).format("YY-MM-DD") }}
@@ -48,6 +60,8 @@
     </template>
     <template #optional="{ record }">
       <a-space>
+        <!--把当前记录传递出去-->
+        <a-button status="success" @click="doUpdate?.(record)">修改</a-button>
         <a-button status="danger" @click="doDelete(record)">删除</a-button>
       </a-space>
     </template>
@@ -55,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, watchEffect, withDefaults } from "vue";
+import { defineExpose, defineProps, ref, watchEffect, withDefaults } from "vue";
 import {
   deleteScoringResultUsingPost,
   listScoringResultByPageUsingPost,
@@ -65,9 +79,9 @@ import message from "@arco-design/web-vue/es/message";
 import { dayjs } from "@arco-design/web-vue/es/_utils/date";
 
 // 当前appId
-
 interface Props {
   appId: number;
+  doUpdate: (scoringResult: API.ScoringResultVO) => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -81,6 +95,8 @@ const initSearchParams = {
   appId: props.appId,
   current: 1,
   pageSize: 10,
+  sortField: "createTime",
+  sortOrder: "descend",
 };
 
 const searchParams = ref<API.ScoringResultQueryRequest>({
@@ -101,7 +117,10 @@ const loadData = async () => {
     message.error("获取数据失败，" + res.data.message);
   }
 };
-
+// 暴露当前加载数据的方法
+defineExpose({
+  loadData,
+});
 /**
  * 执行搜索
  */
@@ -171,6 +190,8 @@ const columns = [
   {
     title: "结果属性",
     dataIndex: "resultProp",
+    slotName: "resultProp",
+    align: "center",
   },
   {
     title: "评分范围",
@@ -193,6 +214,7 @@ const columns = [
   {
     title: "操作",
     slotName: "optional",
+    align: "center",
   },
 ];
 </script>

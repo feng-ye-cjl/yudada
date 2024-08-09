@@ -14,7 +14,10 @@
             创建时间：{{ dayjs(app?.createTime).format("YYYY-MM-DD HH:mm:ss") }}
           </p>
           <a-space size="large">
-            <a-button type="primary" :href="`/answer/do/${id}`"
+            <!--<a-button type="primary" :href="`/answer/do/${id}`"-->
+            <a-button
+              type="primary"
+              @click="() => router.push(`/answer/do/${id}`)"
               >开始答题
             </a-button>
             <a-button>分享应用</a-button>
@@ -45,13 +48,16 @@
 
 <script setup lang="ts">
 import message from "@arco-design/web-vue/es/message";
-import { deleteAppUsingPost, getAppVoByIdUsingGet } from "@/api/appController";
+import { getAppVoByIdUsingGet } from "@/api/appController";
 import API from "@/api";
 import { APP_SCORING_STRATEGY_MAP, APP_TYPE_MAP } from "../../constant/app";
 import dayjs from "dayjs";
 import { useLoginUserStore } from "@/store/userStore";
 import { storeToRefs } from "pinia";
 import { computed, defineProps, ref, watchEffect, withDefaults } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 interface Props {
   id: number;
