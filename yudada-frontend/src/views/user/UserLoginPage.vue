@@ -8,7 +8,7 @@
       auto-label-width
     >
       <a-form-item field="userAccount" label="账号">
-        <a-input v-model="form.userAccount" placeholder="请输入账号" />
+        <a-input v-focus v-model="form.userAccount" placeholder="请输入账号" />
       </a-form-item>
       <a-form-item field="userPassword" tooltip="密码不小于 8 位" label="密码">
         <a-input-password
@@ -41,6 +41,7 @@ import { ref } from "vue";
 import { userLoginUsingPost } from "@/api/userController";
 import API from "@/api";
 import { useLoginUserStore } from "@/store/userStore";
+import vFocus from "@/directives/VFocus";
 import { Message } from "@arco-design/web-vue";
 import { useRouter } from "vue-router";
 

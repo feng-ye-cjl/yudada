@@ -6,6 +6,7 @@
         mode="horizontal"
         :selected-keys="selectKeys"
         @menu-item-click="doMenuClick"
+        breakpoint="xl"
       >
         <a-menu-item
           key="0"
@@ -20,6 +21,14 @@
         <a-menu-item v-for="item in visibleRoutes" :key="item.path">
           {{ item.name }}
         </a-menu-item>
+        <a-sub-menu
+          v-if="loginUser.userRole && loginUser.userRole === accessEnum.ADMIN"
+        >
+          <template #title>后台管理</template>
+          <a-menu-item v-for="item in adminRouter" :key="item.path">
+            {{ item.name }}
+          </a-menu-item>
+        </a-sub-menu>
       </a-menu>
     </a-col>
     <!--固定100px-->
@@ -49,6 +58,7 @@ import { storeToRefs } from "pinia";
 import checkAccess from "@/access/checkAccess";
 import { userLogoutUsingPost } from "@/api/userController";
 import { Message } from "@arco-design/web-vue";
+import accessEnum from "@/access/accessEnum";
 
 // 登录用户信息
 const userStore = useLoginUserStore();
@@ -88,7 +98,16 @@ const visibleRoutes = computed(() => {
     if (!checkAccess(userStore.loginUser, item.meta?.access as string)) {
       return false;
     }
+    // 过滤管理页面
+    if (item.path.startsWith("/admin")) {
+      return false;
+    }
     return true;
+  });
+});
+const adminRouter = computed(() => {
+  return routes.filter((item) => {
+    return item.path.startsWith("/admin");
   });
 });
 

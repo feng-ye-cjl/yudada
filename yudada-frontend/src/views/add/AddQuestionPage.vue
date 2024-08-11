@@ -94,78 +94,6 @@
         </a-button>
       </div>
     </a-form>
-
-    <!--<a-form-->
-    <!--  :model="form"-->
-    <!--  :style="{ width: '580px', margin: '0 auto' }"-->
-    <!--  label-align="left"-->
-    <!--  @submit="handleSubmit"-->
-    <!--&gt;-->
-    <!--  <h2 style="margin-bottom: 16px; text-align: center">设置题目</h2>-->
-    <!--  <a-form-item label="应用id"> {{ appId }}</a-form-item>-->
-    <!--  <a-form-item label="题目列表" :content-flex="false" :merge-props="false">-->
-    <!--    <a-button @click="addQuestion(questionList.length)"-->
-    <!--      >底部添加题目-->
-    <!--    </a-button>-->
-    <!--    &lt;!&ndash;题目表单&ndash;&gt;-->
-    <!--    <div v-for="(question, index) of questionList" :key="index">-->
-    <!--      <a-space size="large">-->
-    <!--        <h3>题目{{ index + 1 }}</h3>-->
-    <!--        <a-button @click="addQuestion(index + 1)">添加题目</a-button>-->
-    <!--        <a-button status="danger" @click="deleteQuestion(index)"-->
-    <!--          >删除题目-->
-    <!--        </a-button>-->
-    <!--      </a-space>-->
-    <!--      <a-form-item label="标题">-->
-    <!--        <a-input v-model="question.title" placeholder="请输入标题" />-->
-    <!--      </a-form-item>-->
-    <!--      &lt;!&ndash;题目选项&ndash;&gt;-->
-    <!--      <a-space>-->
-    <!--        <h4>选项列表</h4>-->
-    <!--        <a-button @click="addOption(question, question.options.length)"-->
-    <!--          >底部添加选项-->
-    <!--        </a-button>-->
-    <!--      </a-space>-->
-    <!--      &lt;!&ndash;选项列表&ndash;&gt;-->
-    <!--      <a-form-item-->
-    <!--        :label="`选项${optionIndex + 1}`"-->
-    <!--        v-for="(option, optionIndex) of question.options"-->
-    <!--        :key="optionIndex"-->
-    <!--        :content-flex="false"-->
-    <!--        :merge-props="false"-->
-    <!--      >-->
-    <!--        <a-form-item label="选项key">-->
-    <!--          <a-input v-model="option.title" placeholder="请输入选项key" />-->
-    <!--        </a-form-item>-->
-    <!--        <a-form-item label="选项值">-->
-    <!--          <a-input v-model="option.value" placeholder="请输入选项value" />-->
-    <!--        </a-form-item>-->
-    <!--        <a-form-item label="选项结果">-->
-    <!--          <a-input v-model="option.result" placeholder="请输入选项结果" />-->
-    <!--        </a-form-item>-->
-    <!--        <a-form-item label="选项得分">-->
-    <!--          <a-input v-model="option.score" placeholder="请输入选项得分" />-->
-    <!--        </a-form-item>-->
-    <!--        <a-space size="large">-->
-    <!--          <a-button @click="addOption(question, optionIndex + 1)"-->
-    <!--            >添加选项-->
-    <!--          </a-button>-->
-    <!--          <a-button-->
-    <!--            status="danger"-->
-    <!--            @click="deleteOption(question, optionIndex as number)"-->
-    <!--            >删除选项-->
-    <!--          </a-button>-->
-    <!--        </a-space>-->
-    <!--      </a-form-item>-->
-    <!--      <a-divider v-if="index + 1 !== questionList.length" />-->
-    <!--    </div>-->
-    <!--  </a-form-item>-->
-    <!--  <a-form-item>-->
-    <!--    <a-button type="primary" html-type="submit" style="width: 100px"-->
-    <!--      >提交-->
-    <!--    </a-button>-->
-    <!--  </a-form-item>-->
-    <!--</a-form>-->
   </div>
 </template>
 
@@ -261,7 +189,7 @@ const deleteOption = (question: API.QuestionContentDTO, index: number) => {
 const router = useRouter();
 
 // 老题目列表
-const oldQueston = ref<API.QuestionVO>();
+const oldQuestion = ref<API.QuestionVO>();
 // 获取信息
 const loadData = async () => {
   if (props.appId === 0) {
@@ -277,12 +205,10 @@ const loadData = async () => {
   });
   if (res.data.code === 0) {
     if (res.data.data?.records) {
-      oldQueston.value = res.data.data.records[0];
-      console.log("旧题目列表", res.data.data);
-      console.log("旧题目列表", oldQueston.value);
+      oldQuestion.value = res.data.data.records[0];
       // 如果老列表有值则设置
-      if (oldQueston.value) {
-        questionList.value = oldQueston.value.questionContent ?? [];
+      if (oldQuestion.value) {
+        questionList.value = oldQuestion.value.questionContent ?? [];
       }
     }
   } else {
@@ -299,17 +225,17 @@ const handleSubmit = async () => {
     return;
   }
   let res;
-  if (props.appId === 0) {
-    // 创建
-    res = await addQuestionUsingPost({
-      appId: props.appId,
+  if (oldQuestion.value?.id) {
+    // 编辑
+    res = await editQuestionUsingPost({
+      id: oldQuestion.value?.id,
       // 一个题目列表
       questionContent: questionList.value,
     });
   } else {
-    // 编辑
-    res = await editQuestionUsingPost({
-      id: oldQueston.value?.id,
+    // 创建
+    res = await addQuestionUsingPost({
+      appId: props.appId,
       // 一个题目列表
       questionContent: questionList.value,
     });
