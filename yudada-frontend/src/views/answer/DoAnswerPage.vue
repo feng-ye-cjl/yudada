@@ -39,6 +39,7 @@
             <a-button
               type="primary"
               v-if="currentNum === questionList.length"
+              :loading="isSubmit"
               @click="handleSubmit"
               >提交答案
             </a-button>
@@ -144,6 +145,7 @@ const loadData = async () => {
 };
 onMounted(() => loadData());
 
+const isSubmit = ref(false);
 /**
  * 提交
  */
@@ -151,6 +153,7 @@ const handleSubmit = async () => {
   if (!props.appId) {
     return;
   }
+  isSubmit.value = true;
   const res = await addUserAnswerUsingPost({
     appId: props.appId,
     choices: answerList.value,
@@ -164,9 +167,15 @@ const handleSubmit = async () => {
   } else {
     message.error("创建失败，" + res.data.message);
   }
+  isSubmit.value = false;
 };
 </script>
 <style lang="scss" scoped>
 #doAnswerPage {
+  .appCard {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 10px;
+  }
 }
 </style>

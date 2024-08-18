@@ -8,16 +8,22 @@
     >
       <h2 style="margin-bottom: 16px; text-align: center">设置题目</h2>
       <a-space size="large" style="margin-bottom: 20px">
-        <span>应用id: {{ appId }}</span>
+        <a-alert :title="app?.appName" />
         <a-button @click="addQuestion(questionList.length)" status="success"
           >底部添加题目
         </a-button>
+        <AiGenerateDrawer
+          :appId="appId"
+          :appName="app?.appName"
+          :on-generate="onGenerateSuccess"
+        />
       </a-space>
       <a-collapse destroy-on-hide>
         <!-- 一级折叠 -->
         <a-collapse-item v-for="(question, index) of questionList" :key="index">
           <template #header>
             <a-input
+              style="width: 300px"
               v-model="question.title"
               @click.stop="prevent"
               placeholder="请输入标题"
@@ -79,7 +85,10 @@
                 <a-input v-model="option.result" placeholder="请输入选项结果" />
               </a-form-item>
               <a-form-item label="选项得分">
-                <a-input v-model="option.score" placeholder="请输入选项得分" />
+                <a-input-number
+                  v-model="option.score"
+                  placeholder="请输入选项得分"
+                />
               </a-form-item>
             </a-collapse-item>
           </a-collapse>
@@ -107,6 +116,8 @@ import {
   listQuestionVoByPageUsingPost,
 } from "@/api/questionController";
 import { useRouter } from "vue-router";
+import AiGenerateDrawer from "@/views/add/components/AiGenerateDrawer.vue";
+import { getAppVoByIdUsingGet } from "@/api/appController";
 
 interface Props {
   appId: number;
@@ -120,6 +131,9 @@ const form = reactive({
   posts: [{ value: "" }],
 });
 
+// app信息
+const app = ref<API.AppVO>();
+// 题目列表
 const questionList = ref<API.QuestionContentDTO[]>([]);
 
 // 阻止展开
@@ -195,9 +209,10 @@ const loadData = async () => {
   if (props.appId === 0) {
     return;
   }
+  let res;
   // 用分页查找获取一条题目记录
-  const res = await listQuestionVoByPageUsingPost({
-    appId: props.appId as any,
+  res = await listQuestionVoByPageUsingPost({
+    appId: props.appId,
     current: 1,
     pageSize: 1,
     sortField: "createTime",
@@ -211,6 +226,13 @@ const loadData = async () => {
         questionList.value = oldQuestion.value.questionContent ?? [];
       }
     }
+  } else {
+    message.error("获取应用信息失败");
+  }
+  // 获取app信息
+  res = await getAppVoByIdUsingGet({ id: props.appId });
+  if (res.data.code === 0) {
+    app.value = res.data.data;
   } else {
     message.error("获取应用信息失败");
   }
@@ -248,6 +270,11 @@ const handleSubmit = async () => {
   } else {
     message.error("创建失败，" + res.data.message);
   }
+};
+// 生成题目成功的回调
+const onGenerateSuccess = (result: API.QuestionContentDTO[]) => {
+  // 填充题目
+  questionList.value = [...questionList.value, ...result];
 };
 </script>
 <style lang="scss" scoped>

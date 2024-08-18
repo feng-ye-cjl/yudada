@@ -54,7 +54,14 @@ import { APP_SCORING_STRATEGY_MAP, APP_TYPE_MAP } from "../../constant/app";
 import dayjs from "dayjs";
 import { useLoginUserStore } from "@/store/userStore";
 import { storeToRefs } from "pinia";
-import { computed, defineProps, ref, watchEffect, withDefaults } from "vue";
+import {
+  computed,
+  defineProps,
+  onMounted,
+  ref,
+  watchEffect,
+  withDefaults,
+} from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -95,6 +102,8 @@ const IsMe = computed(() => loginUser.value.id === app.value?.userId);
 watchEffect(() => {
   getApp();
 });
+
+onMounted(() => getApp());
 </script>
 
 <style lang="scss" scoped>

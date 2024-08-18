@@ -1,8 +1,8 @@
 <template>
   <div id="answerResult">
     <a-card class="appCard">
-      <a-row>
-        <a-col flex="auto" class="leftContent">
+      <a-row style="display: flex">
+        <a-col flex="700px" class="leftContent">
           <h2>{{ userAnswer?.resultName }}</h2>
           <p>{{ userAnswer?.resultDesc }}</p>
           <p>
@@ -36,7 +36,7 @@
             </a-button>
           </a-space>
         </a-col>
-        <a-col flex="300px">
+        <a-col flex="250px">
           <a-image
             width="100%"
             :src="userAnswer?.user?.userAvatar"
@@ -56,10 +56,8 @@
 import { defineProps, onMounted, ref, withDefaults } from "vue";
 import API from "@/api";
 import message from "@arco-design/web-vue/es/message";
-import { useRouter } from "vue-router";
 import { getUserAnswerVoByIdUsingGet } from "@/api/userAnswerController";
 import dayjs from "dayjs";
-import router from "@/router";
 
 interface Props {
   answerResultId: number;
@@ -87,41 +85,21 @@ const loadData = async () => {
   }
 };
 onMounted(() => loadData());
-
-/**
- * 提交
- */
-// const handleSubmit = async () => {
-//   if (!props.appId) {
-//     return;
-//   }
-//   let res;
-//   if (props.appId === 0) {
-//     // 创建
-//     res = await addQuestionUsingPost({
-//       appId: props.appId,
-//       // 一个题目列表
-//       questionContent: questionList.value,
-//     });
-//   } else {
-//     // 编辑
-//     res = await editQuestionUsingPost({
-//       id: oldQueston.value?.id,
-//       // 一个题目列表
-//       questionContent: questionList.value,
-//     });
-//   }
-//   if (res.data.code === 0) {
-//     message.success("设置成功，即将跳转到应用详情页");
-//     setTimeout(() => {
-//       router.push(`/app/detail/${props.appId}`);
-//     }, 3000);
-//   } else {
-//     message.error("创建失败，" + res.data.message);
-//   }
-// };
 </script>
 <style lang="scss" scoped>
 #answerResult {
+  .appCard {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 10px;
+  }
+
+  .leftContent {
+    padding-right: 20px;
+  }
+
+  .leftContent > p {
+    margin-bottom: 20px;
+  }
 }
 </style>
