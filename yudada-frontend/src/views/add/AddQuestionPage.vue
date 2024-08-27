@@ -16,6 +16,7 @@
           :appId="appId"
           :appName="app?.appName"
           :on-generate="onGenerateSuccess"
+          :on-s-s-e-generate="onSSEGenerateSuccess"
         />
       </a-space>
       <a-collapse destroy-on-hide>
@@ -76,7 +77,7 @@
                 </a-space>
               </template>
               <a-form-item label="选项key">
-                <a-input v-model="option.title" placeholder="请输入选项key" />
+                <a-input v-model="option.key" placeholder="请输入选项key" />
               </a-form-item>
               <a-form-item label="选项值">
                 <a-input v-model="option.value" placeholder="请输入选项value" />
@@ -275,6 +276,12 @@ const handleSubmit = async () => {
 const onGenerateSuccess = (result: API.QuestionContentDTO[]) => {
   // 填充题目
   questionList.value = [...questionList.value, ...result];
+};
+
+// 生成题目成功的SSE回调
+const onSSEGenerateSuccess = (result: API.QuestionContentDTO) => {
+  // 填充题目
+  questionList.value = [...questionList.value, result];
 };
 </script>
 <style lang="scss" scoped>

@@ -2,10 +2,8 @@ package com.yupi.yudada.manager;
 
 import com.zhipu.oapi.ClientV4;
 import com.zhipu.oapi.Constants;
-import com.zhipu.oapi.service.v4.model.ChatCompletionRequest;
-import com.zhipu.oapi.service.v4.model.ChatMessage;
-import com.zhipu.oapi.service.v4.model.ChatMessageRole;
-import com.zhipu.oapi.service.v4.model.ModelApiResponse;
+import com.zhipu.oapi.service.v4.model.*;
+import io.reactivex.Flowable;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -88,6 +86,47 @@ public class AiManager {
         ModelApiResponse invokeModelApiResp = client.invokeModelApi(chatCompletionRequest);
         // 返回结果
         return invokeModelApiResp.getData().getChoices().get(0).getMessage().getContent().toString();
+    }
+
+
+    /**
+     * 通用流式ai请求方法（简化消息传递）
+     *
+     * @param systemMessage 系统消息
+     * @param userMessage   用户消息
+     * @param temperature   稳定参数
+     */
+    public Flowable<ModelData> doStreamRequest(String systemMessage, String userMessage, Float temperature) {
+        List<ChatMessage> messageList = new ArrayList<>();
+        ChatMessage systemMsg = new ChatMessage(ChatMessageRole.SYSTEM.value(), systemMessage);
+        ChatMessage userMsg = new ChatMessage(ChatMessageRole.USER.value(), userMessage);
+        messageList.add(systemMsg);
+        messageList.add(userMsg);
+        // 调用通用请求
+        return doStreamRequest(messageList, temperature);
+    }
+
+
+    /**
+     * 通用流式ai请求方法
+     *
+     * @param messagesList 用户信息
+     * @param temperature  回答稳定程度
+     * @return ai回答结果
+     */
+    public Flowable<ModelData> doStreamRequest(List<ChatMessage> messagesList, Float temperature) {
+        // 构造请求
+        ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
+                .model(Constants.ModelChatGLM4) // 选择大模型
+                .stream(Boolean.TRUE) // 确定流式输出
+                .invokeMethod(Constants.invokeMethod) // 是否同步请求
+                .temperature(temperature)
+                .messages(messagesList) // 请求信息
+                .build();
+        // 发送请求
+        ModelApiResponse invokeModelApiResp = client.invokeModelApi(chatCompletionRequest);
+        // 返回Flowable对象
+        return invokeModelApiResp.getFlowable();
     }
 }
 

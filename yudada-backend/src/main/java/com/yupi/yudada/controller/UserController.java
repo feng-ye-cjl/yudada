@@ -20,6 +20,7 @@ import com.yupi.yudada.model.vo.LoginUserVO;
 import com.yupi.yudada.model.vo.UserVO;
 import com.yupi.yudada.service.UserService;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;

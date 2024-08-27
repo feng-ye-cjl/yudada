@@ -84,6 +84,7 @@ const loadData = async () => {
     message.error("获取应用信息失败");
   }
 };
+
 onMounted(() => loadData());
 </script>
 <style lang="scss" scoped>

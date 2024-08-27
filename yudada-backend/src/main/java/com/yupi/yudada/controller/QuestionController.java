@@ -1,5 +1,6 @@
 package com.yupi.yudada.controller;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yupi.yudada.annotation.AuthCheck;
@@ -20,13 +21,19 @@ import com.yupi.yudada.model.vo.QuestionVO;
 import com.yupi.yudada.service.AppService;
 import com.yupi.yudada.service.QuestionService;
 import com.yupi.yudada.service.UserService;
+import com.zhipu.oapi.service.v4.model.ModelData;
+import io.reactivex.Flowable;
+import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 题目接口
@@ -300,6 +307,65 @@ public class QuestionController {
         String json = result.substring(start, end + 1);
         List<QuestionContentDTO> questionContentDTOList = JSONUtil.toList(json, QuestionContentDTO.class);
         return ResultUtils.success(questionContentDTOList);
+    }
+
+    @GetMapping("ai_generate/sse")
+    public SseEmitter aiGenerateQuestionSSE(AiGenerateQuestionRequest aiGenerateQuestionRequest) {
+        // 1.异常判断
+        ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
+        // 2.获取参数
+        Long appId = aiGenerateQuestionRequest.getAppId();
+        int questionNumber = aiGenerateQuestionRequest.getQuestionNumber();
+        int optionNumber = aiGenerateQuestionRequest.getOptionNumber();
+        // 2.1获取应用信息
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
+        // 3.封装prompt
+        String usermessage = getGenerateQuestionUserMessage(app, questionNumber, optionNumber);
+        // 4.建立SSE连接对象
+        SseEmitter emitter = new SseEmitter(0L);
+        // 5.AI生成 流式返回
+        Flowable<ModelData> modelDataFlowable =
+                aiManager.doStreamRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, usermessage, null);
+        // 拼接返回值
+        StringBuilder contentBuilder = new StringBuilder();
+        // 定义计数器
+        AtomicInteger count = new AtomicInteger(0);
+        modelDataFlowable
+                .observeOn(Schedulers.io()) // 异步线程执行
+                .map(item -> item.getChoices().get(0).getDelta().getContent())
+                .map(message -> message.replaceAll("\\s","")) // 替换任意空白字符
+                .filter(StrUtil::isNotBlank) // 保留非空白字符
+                .flatMap(message -> {
+                    // 将字符转化为list
+                    ArrayList<Character> list = new ArrayList<>();
+                    for (char c : message.toCharArray()) {
+                        list.add(c);
+                    }
+                    return Flowable.fromIterable(list);
+                })
+                .doOnNext(c -> {
+                    // 识别第一个{表示开始传输json数据
+                    if (c == '{') {
+                        count.addAndGet(1);
+                    }
+                    if (count.get() > 0) {
+                        // 开始拼接
+                        contentBuilder.append(c);
+                    }
+                    if (c == '}') {
+                        count.addAndGet(-1);
+                        if (count.get() == 0) {
+                            // 拼接一道完整的题目开启推送
+                            emitter.send(JSONUtil.toJsonStr(contentBuilder.toString()));
+                            // 清空当前题目
+                            contentBuilder.setLength(0);
+                        }
+                    }
+                })
+                .doOnComplete(emitter::complete).subscribe();
+        // sse流式返回数据
+        return emitter;
     }
 
     // endregion
