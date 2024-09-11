@@ -39,7 +39,6 @@ public class AppController {
     private UserService userService;
 
     // region 增删改查
-
     /**
      * 创建应用
      *

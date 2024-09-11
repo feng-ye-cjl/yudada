@@ -1,24 +1,27 @@
 package com.yupi.yudada.scoring;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.yupi.yudada.manager.AiManager;
 import com.yupi.yudada.model.dto.question.QuestionAnswerDTO;
 import com.yupi.yudada.model.dto.question.QuestionContentDTO;
 import com.yupi.yudada.model.entity.App;
 import com.yupi.yudada.model.entity.Question;
-import com.yupi.yudada.model.entity.ScoringResult;
 import com.yupi.yudada.model.entity.UserAnswer;
 import com.yupi.yudada.model.vo.QuestionVO;
 import com.yupi.yudada.service.QuestionService;
-import com.yupi.yudada.service.ScoringResultService;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 
 import javax.annotation.Resource;
-import javax.xml.transform.Result;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 
 // 改为ai评分策略
@@ -29,10 +32,20 @@ public class AiGenerateTestScoringStrategy implements ScoringStrategy {
     private QuestionService questionService;
 
     @Resource
-    private ScoringResultService scoringResultService;
+    private AiManager aiManager;
 
     @Resource
-    private AiManager aiManager;
+    private RedissonClient redissonClient;
+
+    /**
+     * 本地缓存
+     */
+    private final Cache<String, String> answerCacheMap = Caffeine
+            .newBuilder()
+            .initialCapacity(1024)
+            // 缓存5分钟移除
+            .expireAfterAccess(5L, TimeUnit.MINUTES)
+            .build();
 
 
     private static final String AI_TEST_SCORING_SYSTEM_MESSAGE = "你是一位严谨的判题专家，我会给你如下信息：\n" +
@@ -49,6 +62,23 @@ public class AiGenerateTestScoringStrategy implements ScoringStrategy {
             "{\"resultName\": \"评价名称\", \"resultDesc\": \"评价描述\"}\n" +
             "```\n" +
             "3. 返回格式必须为 JSON 对象";
+
+
+    /**
+     * 构建缓存key
+     *
+     * @param appId      appId
+     * @param choicesStr 用户选择的选项列表
+     * @return 缓存的key
+     */
+    private String buildCacheKey(Long appId, String choicesStr) {
+        // 利用appId和用户选项列表构建缓存key
+//        return DigestUtil.md5Hex(appId + ":" + choicesStr);
+        return appId + ":" + choicesStr;
+    }
+
+    // 分布式锁前缀
+    private static final String AI_ANSWER_LOCK = "AI_ANSWER_LOCK";
 
     /**
      * 获取用户输入
@@ -76,28 +106,66 @@ public class AiGenerateTestScoringStrategy implements ScoringStrategy {
     @Override
     public UserAnswer doScore(List<String> choices, App app) throws Exception {
         Long appId = app.getId();
-        // 1.根据Id查询题目
-        LambdaQueryWrapper<Question> questionLambdaQueryWrapper = Wrappers.lambdaQuery(Question.class)
-                .eq(Question::getAppId, appId);
-        Question question = questionService.getOne(questionLambdaQueryWrapper);
-        // 获取题目列表
-        QuestionVO questionVO = QuestionVO.objToVo(question);
-        List<QuestionContentDTO> questionContent = questionVO.getQuestionContent();
+        // 如果有缓存则直接命中返回结果
+        // 构建缓存key
+        String choicesStr = JSONUtil.toJsonStr(choices);
+        String cacheKey = buildCacheKey(appId, choicesStr);
+        String answerStr = answerCacheMap.getIfPresent(cacheKey);
+        if (StrUtil.isNotBlank(answerStr)) {
+            UserAnswer userAnswer = JSONUtil.toBean(answerStr, UserAnswer.class);
+            userAnswer.setAppId(appId);
+            userAnswer.setAppType(app.getAppType());
+            userAnswer.setScoringStrategy(app.getScoringStrategy());
+            userAnswer.setChoices(choicesStr);
+            return userAnswer;
+        }
 
-        // 2.调用AI获取结果
-        // 封装prompt
-        String userMessage = getAiTestScoringUserMessage(app, questionContent, choices);
-        // ai生成
-        String json = aiManager.doSyncStableRequest(AI_TEST_SCORING_SYSTEM_MESSAGE, userMessage);
-        int start = json.indexOf("{");
-        int end = json.indexOf("}");
-        String result = json.substring(start, end + 1);
-        // 3.构造返回值
-        UserAnswer userAnswer = JSONUtil.toBean(result, UserAnswer.class);
-        userAnswer.setAppId(appId);
-        userAnswer.setAppType(app.getAppType());
-        userAnswer.setScoringStrategy(app.getScoringStrategy());
-        userAnswer.setChoices(JSONUtil.toJsonStr(choices));
-        return userAnswer;
+        // 分布式锁
+        RLock lock = redissonClient.getLock(AI_ANSWER_LOCK + cacheKey);
+
+        try {
+            // 竞争锁，等待3秒，15秒自动释放
+            boolean flag = lock.tryLock(3, 15, TimeUnit.SECONDS);
+            if (!flag) {
+                return null;
+            }
+
+            // 1.根据Id查询题目
+            LambdaQueryWrapper<Question> questionLambdaQueryWrapper = Wrappers.lambdaQuery(Question.class)
+                    .eq(Question::getAppId, appId);
+            Question question = questionService.getOne(questionLambdaQueryWrapper);
+            // 获取题目列表
+            QuestionVO questionVO = QuestionVO.objToVo(question);
+            List<QuestionContentDTO> questionContent = questionVO.getQuestionContent();
+
+            // 2.调用AI获取结果
+            // 封装prompt
+            String userMessage = getAiTestScoringUserMessage(app, questionContent, choices);
+            // ai生成
+            String json = aiManager.doSyncStableRequest(AI_TEST_SCORING_SYSTEM_MESSAGE, userMessage);
+            int start = json.indexOf("{");
+            int end = json.indexOf("}");
+            String result = json.substring(start, end + 1);
+
+            // 缓存结果
+            answerCacheMap.put(cacheKey, result);
+
+            // 3.构造返回值
+            UserAnswer userAnswer = JSONUtil.toBean(result, UserAnswer.class);
+            userAnswer.setAppId(appId);
+            userAnswer.setAppType(app.getAppType());
+            userAnswer.setScoringStrategy(app.getScoringStrategy());
+            userAnswer.setChoices(choicesStr);
+            return userAnswer;
+        } finally {
+            // 锁不为空，且被锁上了
+            if (lock != null && lock.isLocked()) {
+                // 是当前线程的
+                if (lock.isHeldByCurrentThread()) {
+                    // 解锁
+                    lock.unlock();
+                }
+            }
+        }
     }
 }

@@ -161,9 +161,7 @@ const handleSubmit = async () => {
   if (res.data.code === 0) {
     message.success("提交成功");
     const answerId = res.data.data;
-    setTimeout(() => {
-      router.push(`/answer/result/${answerId}`);
-    }, 3000);
+    await router.push(`/answer/result/${answerId}`);
   } else {
     message.error("创建失败，" + res.data.message);
   }
