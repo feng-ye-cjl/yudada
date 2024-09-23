@@ -1,9 +1,13 @@
 package com.yupi.yudada.manager;
 
+import com.yupi.yudada.common.ErrorCode;
+import com.yupi.yudada.exception.BusinessException;
 import com.zhipu.oapi.ClientV4;
 import com.zhipu.oapi.Constants;
 import com.zhipu.oapi.service.v4.model.*;
 import io.reactivex.Flowable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -15,6 +19,7 @@ public class AiManager {
 
     private static final float STABLE_TEMPERATURE = 0.05f;
     private static final float UNSTABLE_TEMPERATURE = 0.99f;
+    private static final Logger log = LoggerFactory.getLogger(AiManager.class);
 
     @Resource
     private ClientV4 client;
@@ -84,6 +89,14 @@ public class AiManager {
                 .build();
         // 发送请求
         ModelApiResponse invokeModelApiResp = client.invokeModelApi(chatCompletionRequest);
+//        System.out.println("invokeModelApiResp = " + invokeModelApiResp.toString());
+//        System.out.println("invokeModelApiResp.getCode() = " + invokeModelApiResp.getCode());
+//        System.out.println("invokeModelApiResp.getCode() == 429 = ");
+//        System.out.println(invokeModelApiResp.getCode() == 429);
+//        System.out.println("invokeModelApiResp.getCode() == 429 = ");
+//        if (invokeModelApiResp.getCode() == 429) {
+//            throw new BusinessException(ErrorCode.SYSTEM_ERROR, invokeModelApiResp.getMsg());
+//        }
         // 返回结果
         return invokeModelApiResp.getData().getChoices().get(0).getMessage().getContent().toString();
     }

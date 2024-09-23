@@ -1,7 +1,36 @@
 # 公共配置文件
-# @author <a href="https://github.com/liyupi">程序员鱼皮</a>
-# @from <a href="https://yupi.icu">编程导航知识星球</a>
 spring:
+  # 分库分表配置
+  shardingsphere:
+    #数据源配置
+    datasource:
+      # 多数据源以逗号隔开即可
+      names: yudada
+      yudada:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://localhost:3306/yudada?allowPublicKeyRetrieval=true&useSSL=false&autoReconnect=true&characterEncoding=utf8
+        username: root
+        password: 12345678
+    # 规则配置
+    rules:
+      sharding:
+        # 分片算法配置
+        sharding-algorithms:
+          # 自定义分片规则名
+          answer-table-inline:
+            ## inline 类型是简单的配置文件里面就能写的类型，其他还有自定义类等等
+            type: INLINE
+            props:
+              algorithm-expression: user_answer_$->{appId % 2}
+        tables:
+          user_answer:
+            actual-data-nodes: yudada.user_answer_$->{0..1}
+            # 分表策略
+            table-strategy:
+              standard:
+                sharding-column: appId
+                sharding-algorithm-name: answer-table-inline
   application:
     name: yudada-backend
   # 默认 dev 环境
@@ -19,11 +48,12 @@ spring:
     timeout: 2592000
   # 数据库配置
   # todo 需替换配置
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/yudada
-    username: root
-    password: 12345678
+  # 数据源挪到sharding下面
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/yudada
+#    username: root
+#    password: 12345678
   # Redis 配置
   # todo 需替换配置，然后取消注释
   redis:
@@ -31,7 +61,7 @@ spring:
     host: localhost
     port: 6379
     timeout: 2000
-#    password: 12345678
+  #    password: 12345678
   # Elasticsearch 配置
   # todo 需替换配置，然后取消注释
   # 文件上传
@@ -77,4 +107,4 @@ knife4j:
         api-rule-resources:
           - com.yupi.yudada.controller
 ai:
-  apiKey: c925994d4acf0c9be4ed9d9c7e137b88.9Qcno73IK6yHl2PP
+  apiKey: 8b58ae0e830a183f2b7dd17dc1da4544.RwMaELCgv4F5LQ7X

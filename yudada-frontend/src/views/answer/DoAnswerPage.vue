@@ -18,12 +18,6 @@
             :options="currentOptions"
             @change="(value) => (answerList[currentNum - 1] = value)"
           />
-          <!--<div></div>-->
-          <!--{{ currentNum }}-->
-          <!--<div></div>-->
-          <!--{{ currentAnswer }}-->
-          <!--<div></div>-->
-          <!--{{ answerList }}-->
           <div style="margin-bottom: 20px"></div>
           <a-space size="large">
             <a-button
@@ -75,7 +69,10 @@ import message from "@arco-design/web-vue/es/message";
 import { listQuestionVoByPageUsingPost } from "@/api/questionController";
 import { useRouter } from "vue-router";
 import { getAppVoByIdUsingGet } from "@/api/appController";
-import { addUserAnswerUsingPost } from "@/api/userAnswerController";
+import {
+  addUserAnswerUsingPost,
+  generateUserAnswerIdUsingGet,
+} from "@/api/userAnswerController";
 
 interface Props {
   appId: number;
@@ -95,7 +92,7 @@ const currentQuestion = ref<API.QuestionVO>({});
 // 当前选项
 const currentOptions = computed(() => {
   return currentQuestion.value?.options
-    ? currentQuestion.value.options.map((option: any) => {
+    ? currentQuestion.value?.options.map((option: any) => {
         return {
           label: `${option.key}.${option.value}`,
           value: option.key,
@@ -107,6 +104,24 @@ const currentOptions = computed(() => {
 const currentAnswer = ref();
 // 答案列表
 const answerList = ref([]);
+// 唯一id
+const id = ref<number>();
+
+/**
+ * 生成唯一id
+ */
+const generateId = async () => {
+  let res = await generateUserAnswerIdUsingGet();
+  if (res.data.code === 0) {
+    id.value = res.data.data;
+  } else {
+    message.error("生成唯一id失败，" + res.data.message);
+  }
+};
+
+watchEffect(() => {
+  generateId();
+});
 
 // 监听题号切换题目
 watchEffect(() => {
@@ -154,16 +169,21 @@ const handleSubmit = async () => {
     return;
   }
   isSubmit.value = true;
+  // 提交时携带唯一id
   const res = await addUserAnswerUsingPost({
     appId: props.appId,
     choices: answerList.value,
+    id: id.value,
   });
   if (res.data.code === 0) {
     message.success("提交成功");
     const answerId = res.data.data;
+    // setTimeout(async () => {
+    //   await router.push(`/answer/result/${answerId}`);
+    // }, 2000);
     await router.push(`/answer/result/${answerId}`);
   } else {
-    message.error("创建失败，" + res.data.message);
+    message.error(res.data.message + "");
   }
   isSubmit.value = false;
 };

@@ -23,6 +23,7 @@ import com.yupi.yudada.service.QuestionService;
 import com.yupi.yudada.service.UserService;
 import com.zhipu.oapi.service.v4.model.ModelData;
 import io.reactivex.Flowable;
+import io.reactivex.Scheduler;
 import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -56,6 +57,9 @@ public class QuestionController {
 
     @Resource
     private AiManager aiManager;
+
+    @Resource
+    private Scheduler vipScheduler;
 
     // region 增删改查
 
@@ -310,7 +314,7 @@ public class QuestionController {
     }
 
     @GetMapping("ai_generate/sse")
-    public SseEmitter aiGenerateQuestionSSE(AiGenerateQuestionRequest aiGenerateQuestionRequest) {
+    public SseEmitter aiGenerateQuestionSSE(AiGenerateQuestionRequest aiGenerateQuestionRequest, HttpServletRequest request) {
         // 1.异常判断
         ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
         // 2.获取参数
@@ -331,8 +335,15 @@ public class QuestionController {
         StringBuilder contentBuilder = new StringBuilder();
         // 定义计数器
         AtomicInteger count = new AtomicInteger(0);
+        // 默认全局线程池
+        Scheduler scheduler = Schedulers.io();
+        User loginUser = userService.getLoginUser(request);
+        // 如果用户是 VIP，则使用定制线程池
+        if ("vip".equals(loginUser.getUserRole())) {
+            scheduler = vipScheduler;
+        }
         modelDataFlowable
-                .observeOn(Schedulers.io()) // 异步线程执行
+                .observeOn(scheduler) // 异步线程执行
                 .map(item -> item.getChoices().get(0).getDelta().getContent())
                 .map(message -> message.replaceAll("\\s","")) // 替换任意空白字符
                 .filter(StrUtil::isNotBlank) // 保留非空白字符

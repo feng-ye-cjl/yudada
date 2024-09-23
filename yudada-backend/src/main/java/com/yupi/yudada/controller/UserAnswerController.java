@@ -1,5 +1,6 @@
 package com.yupi.yudada.controller;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yupi.yudada.annotation.AuthCheck;
@@ -25,6 +26,7 @@ import com.yupi.yudada.service.UserAnswerService;
 import com.yupi.yudada.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -82,9 +84,13 @@ public class UserAnswerController {
         // 填充默认值
         User loginUser = userService.getLoginUser(request);
         userAnswer.setUserId(loginUser.getId());
-        // 写入数据库
-        boolean result = userAnswerService.save(userAnswer);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        // 写入数据库（id通过拷贝属性获得）
+        try {
+            boolean result = userAnswerService.save(userAnswer);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        } catch (DuplicateKeyException e) {
+            // ignore 如果多次插入则直接忽略
+        }
         // 返回新写入的数据 id
         long newUserAnswerId = userAnswer.getId();
         // 调用评分模块执行评分
@@ -92,6 +98,8 @@ public class UserAnswerController {
             UserAnswer userAnswerWithResult = scoringStrategyExecutor.doScore(choices, app);
             // 设置id
             userAnswerWithResult.setId(newUserAnswerId);
+            // 分库分表后不能更新分表字段，把appId设置为空
+            userAnswerWithResult.setAppId(null);
             userAnswerService.updateById(userAnswerWithResult);
         } catch (Exception e) {
             e.printStackTrace();
@@ -272,4 +280,13 @@ public class UserAnswerController {
     }
 
     // endregion
+
+    /**
+     * 生成唯一ID
+     * @return
+     */
+    @GetMapping("/generate/id")
+    public BaseResponse<Long> generateUserAnswerId() {
+        return ResultUtils.success(IdUtil.getSnowflakeNextId());
+    }
 }

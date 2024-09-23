@@ -35,6 +35,7 @@ import { listAppVoByPageUsingPost } from "@/api/appController";
 import { Message } from "@arco-design/web-vue";
 import API from "@/api";
 import { REVIEW_STATUS_ENUM } from "@/constant/app";
+import ShareModal from "@/components/ShareModal.vue";
 // 初始分页参数（不可修改）
 const iniSearchParams = {
   current: 1,
